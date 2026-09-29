@@ -53,6 +53,9 @@
 <form method="post" action="/sends/{{ row.id }}/resolve">
   <select name="outcome"><option value="sent">it was sent</option><option value="failed">it was not sent</option></select>
   <button>Save</button></form>
+{% elif row.state == 'failed' %}
+<form method="post" action="/sends/{{ row.id }}/retry">
+  <button>Retry</button></form>
 {% endif %}</td></tr>
 {% else %}
 <tr><td colspan="5" class="muted">Nothing. Good.</td></tr>

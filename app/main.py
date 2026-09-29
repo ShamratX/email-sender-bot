@@ -1075,3 +1075,18 @@ def resolve_unknown(send_id: int, outcome: str = Form("sent")):
         (state, send_id),
     )
     return back("/")
+
+
+@app.post("/sends/{send_id}/retry")
+def retry_failed(send_id: int):
+    """Deletes a 'failed' row so its (lead, campaign, step) slot opens back up
+    for the next pass -- a permanent error otherwise blocks that lead on that
+    step forever, since candidates() skips any step with an existing row no
+    matter its state. Only 'failed' rows qualify; 'sent' rows are never
+    touched, so this can't be used to accidentally resend something."""
+    conn = db.connect()
+    row = conn.execute("SELECT lead_id, campaign_id, step FROM sends WHERE id=? AND state='failed'", (send_id,)).fetchone()
+    if row:
+        conn.execute("DELETE FROM sends WHERE id=?", (send_id,))
+        db.log_event("send_retry_queued", None, dict(row))
+    return back("/")

@@ -369,8 +369,24 @@ class AlreadyHandled(Exception):
     """This (lead, campaign, step) already has a send row. Never send again."""
 
 
+def _install_id() -> str:
+    """A random value generated once per database, so the same lead_id/
+    campaign_id/step numbers never collide with another install's idempotency
+    keys against the same Resend account -- e.g. testing locally, then
+    running the real thing on a VPS with a fresh database, reuses small
+    sequential IDs that would otherwise produce the identical key Resend
+    already saw with different email content, and get rejected with a 409."""
+    value = get_setting("install_id")
+    if not value:
+        import os
+
+        value = os.urandom(16).hex()
+        set_setting("install_id", value)
+    return value
+
+
 def idempotency_key(lead_id: int, campaign_id: int, step: int) -> str:
-    raw = f"{lead_id}:{campaign_id}:{step}"
+    raw = f"{_install_id()}:{lead_id}:{campaign_id}:{step}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
