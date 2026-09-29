@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
 {% block body %}
-{% include "_switch.html" %}
-
-<p class="muted">Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
+<p class="muted">Sending is <strong>{{ 'RUNNING' if sending_enabled else 'STOPPED' }}</strong> &mdash;
+controlled from each campaign's own Run/Pause button, not here.
+Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
 Worker: {{ worker_status.last_result }}</p>
 
 <h2>Today &mdash; {{ quota.day }}</h2>

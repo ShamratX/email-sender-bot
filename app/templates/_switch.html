@@ -1,9 +1,0 @@
-<div class="switch {{ 'on' if sending_enabled else 'off' }}">
-  {% if sending_enabled %}
-    <span>Sending is RUNNING</span>
-    <form method="post" action="/sending/stop"><button class="stop">STOP</button></form>
-  {% else %}
-    <span>Sending is STOPPED</span>
-    <form method="post" action="/sending/start"><button class="start">Start sending</button></form>
-  {% endif %}
-</div>

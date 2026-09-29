@@ -163,13 +163,6 @@ def country_windows_save(
     return back("/country-windows")
 
 
-@app.post("/sending/{action}")
-def sending(action: str):
-    db.set_setting("sending_enabled", "1" if action == "start" else "0")
-    db.log_event("sending_" + ("started" if action == "start" else "stopped"))
-    return back("/")
-
-
 # --- leads and import -----------------------------------------------------
 
 @app.get("/leads", response_class=HTMLResponse)
@@ -821,6 +814,19 @@ def campaign_action(campaign_id: int, action: str):
     if action in ("run", "pause", "done"):
         state = {"run": "running", "pause": "paused", "done": "done"}[action]
         conn.execute("UPDATE campaigns SET state=? WHERE id=?", (state, campaign_id))
+        if action == "run":
+            # One button now covers both: starting this campaign also turns
+            # the app's master sending switch on, so there's no separate
+            # dashboard step. No manual "stop" button exists anymore either --
+            # pausing/finishing every running campaign is what turns it back
+            # off, checked right below.
+            db.set_setting("sending_enabled", "1")
+        else:
+            still_running = conn.execute(
+                "SELECT 1 FROM campaigns WHERE state='running' LIMIT 1"
+            ).fetchone()
+            if not still_running:
+                db.set_setting("sending_enabled", "0")
     elif action == "release-followups":
         conn.execute("UPDATE campaigns SET followups_released=1 WHERE id=?", (campaign_id,))
     elif action == "auto":
