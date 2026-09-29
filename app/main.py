@@ -504,12 +504,15 @@ def campaign_detail(request: Request, campaign_id: int, msg: str = "", error: st
         return back("/campaigns")
 
     steps = conn.execute(
-        "SELECT cs.step, cs.template_id, t.name, t.body, "
+        "SELECT cs.step, cs.template_id, t.name, t.body, t.footer_enabled, "
         "(SELECT subject FROM subject_variants WHERE template_id=t.id ORDER BY id LIMIT 1) AS subject "
         "FROM campaign_steps cs JOIN templates t ON t.id=cs.template_id "
         "WHERE cs.campaign_id=? ORDER BY cs.step",
         (campaign_id,),
     ).fetchall()
+    # one checkbox for the whole campaign: on unless step 0 (or any step, if
+    # there's no step 0 yet) explicitly has it off
+    footer_on = not steps or bool(steps[0]["footer_enabled"])
 
     if campaign["account_id"]:
         active_inbox_ids = {
@@ -546,6 +549,7 @@ def campaign_detail(request: Request, campaign_id: int, msg: str = "", error: st
         "campaign_detail.html",
         c=campaign,
         steps=steps,
+        footer_on=footer_on,
         progress=engine.campaign_progress(campaign_id),
         inbox_usage=inbox_usage,
         recent_sends=recent_sends,
@@ -678,11 +682,16 @@ def campaign_update_steps(
     windowed_countries: list[str] = Form([]),
     allowed_inboxes: list[str] = Form([]),
     account_id: str = Form(""),
+    footer_enabled: str = Form("1"),
 ):
     """Edits each step's subject/body in place, inline, no dropdown picker --
     same self-contained shape as creating a campaign. Leads already sent a
     step keep the body actually sent to them (sends.body_rendered is a
     permanent record); this only changes what happens to leads not yet there.
+
+    footer_enabled is one checkbox for the whole campaign, applied to every
+    step's own template -- initial and every follow-up -- so there's no need
+    to open each step separately just to turn the unsubscribe footer on/off.
     """
     conn = db.connect()
     campaign = conn.execute("SELECT list_id FROM campaigns WHERE id=?", (campaign_id,)).fetchone()
@@ -727,18 +736,21 @@ def campaign_update_steps(
     }
     name_row = conn.execute("SELECT name FROM campaigns WHERE id=?", (campaign_id,)).fetchone()
 
+    footer_value = 1 if footer_enabled == "1" else 0
     for step, subject, body in steps:
         if step in existing:
             tid = existing[step]
-            conn.execute("UPDATE templates SET body=? WHERE id=?", (body, tid))
+            conn.execute(
+                "UPDATE templates SET body=?, footer_enabled=? WHERE id=?", (body, footer_value, tid)
+            )
             conn.execute("DELETE FROM subject_variants WHERE template_id=?", (tid,))
             conn.execute(
                 "INSERT INTO subject_variants (template_id, subject) VALUES (?, ?)", (tid, subject)
             )
         else:
             tcur = conn.execute(
-                "INSERT INTO templates (name, body, created_at) VALUES (?, ?, ?)",
-                (f"{name_row['name']} :: step {step}", body, db.utcnow()),
+                "INSERT INTO templates (name, body, footer_enabled, created_at) VALUES (?, ?, ?, ?)",
+                (f"{name_row['name']} :: step {step}", body, footer_value, db.utcnow()),
             )
             tid = int(tcur.lastrowid)
             conn.execute(

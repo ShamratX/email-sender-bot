@@ -122,6 +122,11 @@
       {% endfor %}
     </label>
     <label>Daily cap for this campaign (blank = none)<input type="text" name="daily_cap" value="{{ c.daily_cap or '' }}"></label>
+    <label style="font-weight:400">
+      <input type="hidden" name="footer_enabled" value="0">
+      <input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block" {{ 'checked' if footer_on }}>
+      Add unsubscribe footer to every email in this campaign (initial and every follow-up)
+    </label>
     <button class="start">Save</button>
   </form>
 </details>
