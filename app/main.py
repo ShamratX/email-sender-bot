@@ -530,12 +530,6 @@ def campaign_detail(request: Request, campaign_id: int, msg: str = "", error: st
         row for row in quota["inboxes"]
         if not active_inbox_ids or row["id"] in active_inbox_ids
     ]
-    # this campaign's own account cap/usage, not the global default bucket --
-    # a campaign on "Domain B" must see Domain B's own plan limit, not Domain A's
-    campaign_account_id = campaign["account_id"]
-    account_used = warmup.account_sent_today(campaign_account_id)
-    account_cap_value = warmup.account_cap_for(campaign_account_id)
-
     recent_sends = conn.execute(
         "SELECT s.*, l.email FROM sends s JOIN leads l ON l.id=s.lead_id "
         "WHERE s.campaign_id=? ORDER BY s.id DESC LIMIT 30",
@@ -554,8 +548,6 @@ def campaign_detail(request: Request, campaign_id: int, msg: str = "", error: st
         steps=steps,
         progress=engine.campaign_progress(campaign_id),
         inbox_usage=inbox_usage,
-        account_used=account_used,
-        account_cap=account_cap_value,
         recent_sends=recent_sends,
         attention=attention,
         inboxes=all_inboxes,
@@ -854,41 +846,10 @@ def inboxes(request: Request):
             "LEFT JOIN accounts a ON a.id=i.account_id ORDER BY i.id"
         ).fetchall(),
         accounts=accounts,
-        account_schedules={a["id"]: json.loads(a["warmup_schedule"] or "{}") for a in accounts},
-        account_weeks={a["id"]: warmup.warmup_week_for(a["id"]) for a in accounts},
         quota=warmup.quota_report(),
-        schedule=json.loads(db.get_setting("warmup_schedule") or "{}"),
-        start_date=db.get_setting("warmup_start_date"),
-        cap=warmup.account_cap(),
-        followup_cap=warmup.followup_daily_cap(),
-        followup_used=warmup.followups_sent_today(),
+        default_send_limit=warmup.default_send_limit(),
+        default_followup_limit=warmup.default_followup_limit(),
     )
-
-
-@app.post("/accounts/{account_id}/warmup")
-def account_warmup_save(
-    account_id: int,
-    warmup_start_date: str = Form(""),
-    week1: str = Form(""), week2: str = Form(""), week3: str = Form(""), week4: str = Form(""),
-    daily_cap: str = Form(""),
-):
-    """This account's own warm-up clock, schedule and plan cap -- separate
-    from the global defaults, so a second domain doesn't inherit the first
-    domain's week number or a mismatched plan limit."""
-    schedule = {}
-    for key, value in [("1", week1), ("2", week2), ("3", week3), ("4+", week4)]:
-        if value.strip():
-            schedule[key] = int(value)
-    db.connect().execute(
-        "UPDATE accounts SET warmup_start_date=?, warmup_schedule=?, daily_cap=? WHERE id=?",
-        (
-            warmup_start_date.strip(),
-            json.dumps(schedule) if schedule else "",
-            int(daily_cap) if daily_cap.strip() else None,
-            account_id,
-        ),
-    )
-    return back("/inboxes")
 
 
 @app.post("/accounts")
@@ -926,13 +887,19 @@ def inbox_add(
 
 
 @app.post("/inboxes/{inbox_id}/limit")
-def inbox_limit_save(inbox_id: int, daily_limit: str = Form("")):
-    """Manual weekly bump: a raw number the operator sets by hand, overriding
-    the week-derived schedule for just this inbox. Blank clears the override
-    and goes back to the automatic schedule."""
+def inbox_limit_save(
+    inbox_id: int, daily_limit: str = Form(""), daily_followup_limit: str = Form("")
+):
+    """Two numbers the operator sets by hand for this one inbox, bumped up
+    week to week. Blank clears the override and falls back to the global
+    default on the Sending limits card."""
     db.connect().execute(
-        "UPDATE inboxes SET daily_limit=? WHERE id=?",
-        (int(daily_limit) if daily_limit.strip() else None, inbox_id),
+        "UPDATE inboxes SET daily_limit=?, daily_followup_limit=? WHERE id=?",
+        (
+            int(daily_limit) if daily_limit.strip() else None,
+            int(daily_followup_limit) if daily_followup_limit.strip() else None,
+            inbox_id,
+        ),
     )
     return back("/inboxes")
 
@@ -976,20 +943,11 @@ def inbox_delete(inbox_id: int):
 
 @app.post("/warmup")
 def warmup_save(
-    start_date: str = Form(""),
-    week1: int = Form(6),
-    week2: int = Form(12),
-    week3: int = Form(20),
-    week4: int = Form(35),
-    account_cap: int = Form(100),
-    followup_daily_cap: str = Form(""),
+    default_send_limit: int = Form(35),
+    default_followup_limit: str = Form(""),
 ):
-    db.set_setting("warmup_start_date", start_date.strip())
-    db.set_setting(
-        "warmup_schedule", json.dumps({"1": week1, "2": week2, "3": week3, "4+": week4})
-    )
-    db.set_setting("account_daily_cap", account_cap)
-    db.set_setting("followup_daily_cap", followup_daily_cap.strip())
+    db.set_setting("default_daily_send_limit", default_send_limit)
+    db.set_setting("default_daily_followup_limit", default_followup_limit.strip())
     return back("/inboxes")
 
 

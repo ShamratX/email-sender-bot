@@ -212,9 +212,6 @@ def blocked_reason(campaign, now: datetime | None = None) -> str | None:
         return (
             f"outside send window {campaign['window_start']}-{campaign['window_end']}"
         )
-    account_id = campaign["account_id"]
-    if warmup.account_sent_today(account_id) >= warmup.account_cap_for(account_id):
-        return "account daily cap reached"
     if campaign["daily_cap"] and warmup.campaign_sent_today(campaign["id"]) >= campaign["daily_cap"]:
         return "campaign daily cap reached"
     return None
@@ -230,14 +227,6 @@ def send_one(campaign, item: dict, client) -> dict:
     lead = item["lead"]
     if db.is_suppressed(lead["email"]):
         return {"status": "skipped", "reason": "suppressed", "email": lead["email"]}
-
-    if item["step"] > 0:
-        cap = warmup.followup_daily_cap()
-        if cap is not None and warmup.followups_sent_today() >= cap:
-            # "skipped", not "blocked" -- a full follow-up cap must not halt
-            # the rest of this campaign's queue, since later items may well
-            # be step-0 (new) sends that have their own, separate budget.
-            return {"status": "skipped", "reason": "follow-up daily cap reached", "email": lead["email"]}
 
     if db.get_setting("verify_before_send") == "1":
         status = verifier.ensure_verified(lead["email"])
@@ -258,9 +247,12 @@ def send_one(campaign, item: dict, client) -> dict:
     else:
         allowed_raw = (campaign["allowed_inboxes"] or "").strip()
         allowed_ids = {int(x) for x in allowed_raw.split(",") if x.strip()} if allowed_raw else None
-    inbox, reason = warmup.pick_inbox(allowed_ids=allowed_ids)
+    inbox, reason = warmup.pick_inbox(allowed_ids=allowed_ids, is_followup=item["step"] > 0)
     if inbox is None:
-        return {"status": "blocked", "reason": reason}
+        # "skipped", not "blocked" -- new sends and follow-ups have separate
+        # limits now, so one running out must not halt the other type's
+        # remaining items later in this same campaign's queue.
+        return {"status": "skipped", "reason": reason, "email": lead["email"]}
 
     try:
         send_id = db.reserve(lead["id"], campaign["id"], item["step"], inbox["id"])

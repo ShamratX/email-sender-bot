@@ -173,9 +173,8 @@ DEFAULT_SETTINGS = {
     "timezone": "Asia/Dhaka",
     "sending_enabled": "0",
     "send_mode": "fake",  # fake | live -- live requires RESEND_API_KEY
-    "account_daily_cap": "100",
-    "warmup_start_date": "",
-    "warmup_schedule": json.dumps({"1": 6, "2": 12, "3": 20, "4+": 35}),
+    "default_daily_send_limit": "35",     # used per inbox when that inbox has no Send/day of its own
+    "default_daily_followup_limit": "",   # blank = no limit, used when an inbox has no Follow-up/day of its own
     "delay_min_seconds": "45",
     "delay_max_seconds": "180",
     "rotation_cursor": "0",
@@ -278,10 +277,13 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "account_id" not in inbox_columns:
         conn.execute("ALTER TABLE inboxes ADD COLUMN account_id INTEGER")
     if "daily_limit" not in inbox_columns:
-        # Manual per-inbox override, typed in and bumped up by hand week to
-        # week -- NULL means "no override", falls back to the week-derived
-        # schedule below, unchanged from before this column existed.
+        # Manual per-inbox send limit -- NULL means "use the global default".
         conn.execute("ALTER TABLE inboxes ADD COLUMN daily_limit INTEGER")
+    if "daily_followup_limit" not in inbox_columns:
+        # Same idea, kept as a separate number so a backlog of due follow-ups
+        # can't crowd out first-contact sends from the same inbox, or vice
+        # versa. NULL = use the global default (which may itself be "no limit").
+        conn.execute("ALTER TABLE inboxes ADD COLUMN daily_followup_limit INTEGER")
 
     account_columns = {row["name"] for row in conn.execute("PRAGMA table_info(accounts)").fetchall()}
     if "warmup_start_date" not in account_columns:

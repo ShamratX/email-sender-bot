@@ -24,7 +24,6 @@ def store(tmp_path, monkeypatch):
     db.close()
     conn = db.init(path)
     db.set_setting("sending_enabled", "1")
-    db.set_setting("warmup_start_date", clock.now_local().date().isoformat())
     db.set_setting("verify_before_send", "0")  # keep the core suite network-independent
     yield conn
     db.close()
@@ -121,28 +120,50 @@ def test_fresh_reserved_is_left_alone(store):
     assert db.sweep_stale_reserved() == 0
 
 
-# --- 3. warm-up caps ------------------------------------------------------
+# --- 3. sending limits -----------------------------------------------------
 
-def test_per_inbox_limit_follows_the_week(store):
-    start = clock.now_local().date()
-    db.set_setting("warmup_start_date", start.isoformat())
-    assert warmup.per_inbox_limit(start) == 6
-    assert warmup.per_inbox_limit(start + timedelta(days=7)) == 12
-    assert warmup.per_inbox_limit(start + timedelta(days=14)) == 20
-    assert warmup.per_inbox_limit(start + timedelta(days=40)) == 35
+def test_default_send_limit_used_when_inbox_has_no_override(store):
+    add_inbox()
+    db.set_setting("default_daily_send_limit", "5")
+    assert warmup.quota_report()["inboxes"][0]["send_limit"] == 5
 
 
-def test_account_cap_beats_inbox_quota(store):
-    for i in range(4):
-        add_inbox(f"i{i}@example.com", f"I{i}")
-    db.set_setting("account_daily_cap", "3")
+def test_per_inbox_override_wins_over_default(store):
+    inbox_id = add_inbox()
+    db.set_setting("default_daily_send_limit", "5")
+    db.connect().execute("UPDATE inboxes SET daily_limit=20 WHERE id=?", (inbox_id,))
+    assert warmup.quota_report()["inboxes"][0]["send_limit"] == 20
+
+
+def test_followup_limit_is_separate_from_send_limit(store):
+    """A follow-up limit reached on an inbox must not stop that same inbox's
+    new-send budget, and vice versa -- they're two independent numbers."""
+    inbox_id = add_inbox()
+    db.connect().execute(
+        "UPDATE inboxes SET daily_limit=10, daily_followup_limit=1 WHERE id=?", (inbox_id,)
+    )
     today = clock.today()
-    for i in range(3):
-        lead = add_lead(f"x{i}@example.com")
-        send_id = db.reserve(lead, 1, 0, 1)
-        db.settle_sent(send_id, "m", "s", "b", today)
-    inbox, reason = warmup.pick_inbox()
-    assert inbox is None and reason == "account daily cap reached"
+    # use up the inbox's one follow-up slot
+    lead = add_lead("f@example.com")
+    send_id = db.reserve(lead, 1, 1, inbox_id)
+    db.settle_sent(send_id, "m", "s", "b", today)
+
+    inbox, reason = warmup.pick_inbox(is_followup=True)
+    assert inbox is None and reason == "every inbox has reached today's follow-up limit"
+
+    # new-send budget (10/day) is untouched by the follow-up cap being hit
+    inbox, reason = warmup.pick_inbox(is_followup=False)
+    assert inbox is not None and inbox["id"] == inbox_id
+
+
+def test_followup_limit_blank_means_unlimited(store):
+    inbox_id = add_inbox()
+    for i in range(50):
+        lead = add_lead(f"f{i}@example.com")
+        send_id = db.reserve(lead, 1, 1, inbox_id)
+        db.settle_sent(send_id, "m", "s", "b", clock.today())
+    inbox, reason = warmup.pick_inbox(is_followup=True)
+    assert inbox is not None  # no cap set anywhere -- 50 sent today doesn't block a 51st
 
 
 def test_rotation_cursor_persists(store):
@@ -151,7 +172,8 @@ def test_rotation_cursor_persists(store):
     first, _ = warmup.pick_inbox()
     second, _ = warmup.pick_inbox()
     assert first["email"] != second["email"]
-    assert db.get_setting("rotation_cursor") == "0"  # wrapped back round
+    third, _ = warmup.pick_inbox()
+    assert third["email"] == first["email"]  # wrapped back round
 
 
 # --- 4. import is append only --------------------------------------------
@@ -244,8 +266,6 @@ def test_manual_mode_holds_followups_until_released(store):
 def test_fifty_leads_no_duplicates(store):
     for i in range(4):
         add_inbox(f"i{i}@example.com", f"I{i}")
-    db.set_setting("account_daily_cap", "1000")
-    db.set_setting("warmup_start_date", "")  # matured: 35 per inbox
     emails = [f"lead{i}@example.com" for i in range(50)]
     build_campaign(emails, steps=1)
 
@@ -261,7 +281,7 @@ def test_fifty_leads_no_duplicates(store):
 
 def test_warmup_limit_stops_the_run(store):
     add_inbox()
-    db.set_setting("warmup_start_date", clock.now_local().date().isoformat())  # week 1 = 6
+    db.set_setting("default_daily_send_limit", "6")
     build_campaign([f"lead{i}@example.com" for i in range(20)], steps=1)
     client = FakeResend()
     for _ in range(10):
@@ -273,7 +293,6 @@ def test_warmup_limit_stops_the_run(store):
 
 def test_crash_between_send_and_settle(store):
     add_inbox()
-    db.set_setting("warmup_start_date", "")
     campaign = build_campaign(["a@example.com", "b@example.com"], steps=1)
     client = FakeResend()
 
@@ -310,7 +329,6 @@ def test_crash_between_send_and_settle(store):
 
 def test_suppressed_address_is_never_sent(store):
     add_inbox()
-    db.set_setting("warmup_start_date", "")
     build_campaign(["a@example.com", "b@example.com"], steps=1)
     db.suppress("a@example.com", "hard_bounce")
     client = FakeResend()

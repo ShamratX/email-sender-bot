@@ -33,17 +33,16 @@
 
 <h2>Inbox usage today</h2>
 <table>
-<tr><th>Inbox</th><th>Sent</th><th>Limit</th><th></th></tr>
+<tr><th>Inbox</th><th>Sent</th><th>Send limit</th><th>Follow-ups</th><th>Follow-up limit</th></tr>
 {% for row in inbox_usage %}
-<tr><td>{{ row.email }}</td><td>{{ row.used }}</td><td>{{ row.limit }}</td>
-    <td class="barcell"><div class="bar"><div style="width: {{ (100*row.used/row.limit) if row.limit else 0 }}%"></div></div></td></tr>
-{% else %}
-<tr><td colspan="4" class="muted">No inboxes assigned &mdash; uses any enabled inbox.</td></tr>
-{% endfor %}
-<tr class="total">
-  <td>{{ c.account_name or 'Default account' }} total today (shared with other campaigns on this account)</td><td>{{ account_used }}</td><td>{{ account_cap }}</td>
-  <td class="barcell"><div class="bar"><div style="width: {{ (100*account_used/account_cap) if account_cap else 0 }}%"></div></div></td>
+<tr>
+  <td>{{ row.email }}</td>
+  <td>{{ row.send_used }}</td><td>{{ row.send_limit }}</td>
+  <td>{{ row.followup_used }}</td><td>{{ row.followup_limit if row.followup_limit is not none else 'no limit' }}</td>
 </tr>
+{% else %}
+<tr><td colspan="5" class="muted">No inboxes assigned &mdash; uses any enabled inbox.</td></tr>
+{% endfor %}
 </table>
 
 <h2>Needs attention</h2>

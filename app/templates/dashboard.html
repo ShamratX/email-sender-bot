@@ -6,21 +6,18 @@
 <p class="muted">Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
 Worker: {{ worker_status.last_result }}</p>
 
-<h2>Today &mdash; {{ quota.day }} (warm-up week {{ quota.week }}, limit {{ quota.per_inbox_limit }}/inbox)</h2>
+<h2>Today &mdash; {{ quota.day }}</h2>
 <table>
-<tr><th>Inbox</th><th>Sent</th><th>Limit</th><th></th></tr>
+<tr><th>Inbox</th><th>Sent</th><th>Send limit</th><th>Follow-ups</th><th>Follow-up limit</th></tr>
 {% for row in quota.inboxes %}
 <tr>
-  <td>{{ row.email }}</td><td>{{ row.used }}</td><td>{{ row.limit }}</td>
-  <td class="barcell"><div class="bar"><div style="width: {{ (100 * row.used / row.limit) if row.limit else 0 }}%"></div></div></td>
+  <td>{{ row.email }}</td>
+  <td>{{ row.send_used }}</td><td>{{ row.send_limit }}</td>
+  <td>{{ row.followup_used }}</td><td>{{ row.followup_limit if row.followup_limit is not none else 'no limit' }}</td>
 </tr>
 {% else %}
-<tr><td colspan="4">No inboxes yet. <a href="/inboxes">Add one.</a></td></tr>
+<tr><td colspan="5">No inboxes yet. <a href="/inboxes">Add one.</a></td></tr>
 {% endfor %}
-<tr class="total">
-  <td>Account total</td><td>{{ quota.account_used }}</td><td>{{ quota.account_cap }}</td>
-  <td class="barcell"><div class="bar"><div class="{{ 'danger' if quota.account_used * 10 >= quota.account_cap * 9 }}" style="width: {{ (100 * quota.account_used / quota.account_cap) if quota.account_cap else 0 }}%"></div></div></td>
-</tr>
 </table>
 
 <h2>Campaigns</h2>
