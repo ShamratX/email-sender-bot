@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Preview: {{ template.name }}</h1>
+<form method="get" class="inline">
+  <select name="lead_id">
+    {% for l in leads %}<option value="{{ l.id }}" {{ 'selected' if lead and l.id == lead.id }}>{{ l.email }}</option>{% endfor %}
+  </select>
+  <button>Show</button>
+</form>
+{% if lead %}
+<div class="card">
+  <p><strong>To:</strong> {{ lead.email }}</p>
+  <p><strong>Subject:</strong> {{ subject }}</p>
+  <pre>{{ body }}</pre>
+</div>
+<p class="muted">The footer and unsubscribe line are added by the system. A template cannot remove them.</p>
+{% else %}
+<p class="muted">No leads yet.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Templates</h1>
+{% for row in rows %}
+<div class="card">
+  <form method="post" action="/templates">
+    <input type="hidden" name="template_id" value="{{ row.id }}">
+    <label>Name<input type="text" name="name" value="{{ row.name }}"></label>
+    <label>Subject lines (one per line, rotated per lead)
+      <textarea name="subjects" rows="3">{{ subjects[row.id] | join('\n') }}</textarea></label>
+    <label>Body<textarea name="body" rows="10">{{ row.body }}</textarea></label>
+    <label><input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block"
+           {{ 'checked' if row.footer_enabled }}>
+           Include unsubscribe footer</label>
+    <p class="note">Turning this off sends the email with no unsubscribe line or address at all.
+    Most countries' anti-spam laws (CAN-SPAM, CASL, etc) require some way to opt out of commercial email &mdash;
+    only disable this if you're sure this template doesn't need it (e.g. a reply to someone who already contacted you).</p>
+    <label>Footer text (leave blank to use the default from Settings)
+      <textarea name="footer_text" rows="3" placeholder="Unsubscribe: reply UNSUBSCRIBE.">{{ row.footer_text or '' }}</textarea></label>
+    <div class="actions">
+      <button>Save</button>
+      <a href="/templates/{{ row.id }}/preview">Preview against a real lead</a>
+    </div>
+  </form>
+  <div class="actions">
+    <form method="post" action="/templates/{{ row.id }}/delete"
+          onsubmit="return confirm('Delete template {{ row.name }}? Campaigns using it keep their history but can no longer use it for new sends.');">
+      <button class="danger">Delete template</button>
+    </form>
+  </div>
+</div>
+{% endfor %}
+<div class="card">
+  <h2>New template</h2>
+  <form method="post" action="/templates">
+    <label>Name<input type="text" name="name" required></label>
+    <label>Subject lines (one per line)<textarea name="subjects" rows="3" required></textarea></label>
+    <label>Body<textarea name="body" rows="10" required></textarea></label>
+    <label><input type="checkbox" name="footer_enabled" value="1" checked style="width:auto;display:inline-block">
+           Include unsubscribe footer</label>
+    <label>Footer text (leave blank to use the default from Settings)
+      <textarea name="footer_text" rows="3" placeholder="Unsubscribe: reply UNSUBSCRIBE."></textarea></label>
+    <button>Create</button>
+  </form>
+</div>
+{% endblock %}

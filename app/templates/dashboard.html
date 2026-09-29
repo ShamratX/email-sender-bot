@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
+{% block body %}
+{% include "_switch.html" %}
+
+<p class="muted">Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
+Worker: {{ worker_status.last_result }}</p>
+
+<h2>Today &mdash; {{ quota.day }} (warm-up week {{ quota.week }}, limit {{ quota.per_inbox_limit }}/inbox)</h2>
+<table>
+<tr><th>Inbox</th><th>Sent</th><th>Limit</th><th></th></tr>
+{% for row in quota.inboxes %}
+<tr>
+  <td>{{ row.email }}</td><td>{{ row.used }}</td><td>{{ row.limit }}</td>
+  <td class="barcell"><div class="bar"><div style="width: {{ (100 * row.used / row.limit) if row.limit else 0 }}%"></div></div></td>
+</tr>
+{% else %}
+<tr><td colspan="4">No inboxes yet. <a href="/inboxes">Add one.</a></td></tr>
+{% endfor %}
+<tr class="total">
+  <td>Account total</td><td>{{ quota.account_used }}</td><td>{{ quota.account_cap }}</td>
+  <td class="barcell"><div class="bar"><div class="{{ 'danger' if quota.account_used * 10 >= quota.account_cap * 9 }}" style="width: {{ (100 * quota.account_used / quota.account_cap) if quota.account_cap else 0 }}%"></div></div></td>
+</tr>
+</table>
+
+<h2>Campaigns</h2>
+<table>
+<tr><th>Name</th><th>State</th><th>Window</th><th>Follow-ups</th><th>Pending</th><th>Sent</th><th>Failed</th></tr>
+{% for c in campaigns %}
+<tr><td><a href="/campaigns">{{ c.name }}</a></td><td>{{ c.state }}</td>
+    <td>{{ c.window_start }}&ndash;{{ c.window_end }}</td><td>{{ c.followup_mode }}</td>
+    <td>{{ progress[c.id].pending }}</td><td>{{ progress[c.id].sent }}</td>
+    <td class="{{ 'error' if progress[c.id].failed }}">{{ progress[c.id].failed }}</td></tr>
+{% else %}
+<tr><td colspan="7">None yet. <a href="/campaigns">Create one.</a></td></tr>
+{% endfor %}
+</table>
+
+<h2>Needs attention</h2>
+<table>
+<tr><th>Email</th><th>Step</th><th>State</th><th>Detail</th><th>Resolve</th></tr>
+{% for row in attention %}
+<tr><td>{{ row.email }}</td><td>{{ row.step }}</td><td>{{ row.state }}</td><td class="muted">{{ row.error }}</td>
+<td>{% if row.state == 'unknown' %}
+<form method="post" action="/sends/{{ row.id }}/resolve">
+  <select name="outcome"><option value="sent">it was sent</option><option value="failed">it was not sent</option></select>
+  <button>Save</button></form>
+{% endif %}</td></tr>
+{% else %}
+<tr><td colspan="5" class="muted">Nothing. Good.</td></tr>
+{% endfor %}
+</table>
+{% endblock %}

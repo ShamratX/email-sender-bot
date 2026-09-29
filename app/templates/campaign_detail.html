@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
+{% block body %}
+{% set active_countries = (c.windowed_countries or '').split(',') | select | list %}
+<h1>{{ c.name }} <span class="muted">({{ c.state }})</span></h1>
+{% if msg %}<p class="note">{{ msg }}</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+{% set active_inbox_names = inboxes | selectattr('id', 'in', active_inbox_ids) | map(attribute='email') | list %}
+<p class="muted">Leads: {{ c.list_name }} &middot;
+   {% if active_countries %}windowed: {{ active_countries | join(', ') }}{% else %}sends anytime{% endif %}
+   &middot; gap {{ c.gap_days }} days &middot; follow-ups {{ c.followup_mode }}
+   &middot; sending from: {{ active_inbox_names | join(', ') if active_inbox_names else 'any enabled' }}</p>
+
+<div class="actions">
+  <form method="post" action="/campaigns/{{ c.id }}/run" class="inline"><button>Run</button></form>
+  <form method="post" action="/campaigns/{{ c.id }}/pause" class="inline"><button>Pause</button></form>
+  <form method="post" action="/campaigns/{{ c.id }}/{{ 'manual' if c.followup_mode == 'auto' else 'auto' }}" class="inline">
+    <button>Follow-ups: switch to {{ 'manual' if c.followup_mode == 'auto' else 'auto' }}</button></form>
+  <form method="post" action="/campaigns/{{ c.id }}/release-followups" class="inline"><button>Send due follow-ups now</button></form>
+  <form method="post" action="/campaigns/{{ c.id }}/delete" class="inline"
+        onsubmit="return confirm('Delete campaign {{ c.name }}? Send history stays for the leads that received something.');">
+    <button class="danger">Delete campaign</button>
+  </form>
+  <a href="/campaigns">&larr; All campaigns</a>
+</div>
+
+<h2>Progress</h2>
+<table>
+<tr><th>Pending</th><th>Sent</th><th>Failed</th></tr>
+<tr><td>{{ progress.pending }}</td><td>{{ progress.sent }}</td>
+    <td class="{{ 'error' if progress.failed }}">{{ progress.failed }}</td></tr>
+</table>
+
+<h2>Inbox usage today</h2>
+<table>
+<tr><th>Inbox</th><th>Sent</th><th>Limit</th><th></th></tr>
+{% for row in inbox_usage %}
+<tr><td>{{ row.email }}</td><td>{{ row.used }}</td><td>{{ row.limit }}</td>
+    <td class="barcell"><div class="bar"><div style="width: {{ (100*row.used/row.limit) if row.limit else 0 }}%"></div></div></td></tr>
+{% else %}
+<tr><td colspan="4" class="muted">No inboxes assigned &mdash; uses any enabled inbox.</td></tr>
+{% endfor %}
+<tr class="total">
+  <td>{{ c.account_name or 'Default account' }} total today (shared with other campaigns on this account)</td><td>{{ account_used }}</td><td>{{ account_cap }}</td>
+  <td class="barcell"><div class="bar"><div style="width: {{ (100*account_used/account_cap) if account_cap else 0 }}%"></div></div></td>
+</tr>
+</table>
+
+<h2>Needs attention</h2>
+<table>
+<tr><th>Email</th><th>Step</th><th>State</th><th>Detail</th><th>Resolve</th></tr>
+{% for row in attention %}
+<tr><td>{{ row.email }}</td><td>{{ row.step }}</td><td>{{ row.state }}</td><td class="muted">{{ row.error }}</td>
+<td>{% if row.state == 'unknown' %}
+<form method="post" action="/sends/{{ row.id }}/resolve">
+  <select name="outcome"><option value="sent">it was sent</option><option value="failed">it was not sent</option></select>
+  <button>Save</button></form>
+{% endif %}</td></tr>
+{% else %}
+<tr><td colspan="5" class="muted">Nothing. Good.</td></tr>
+{% endfor %}
+</table>
+
+<h2>Recent sends</h2>
+<table>
+<tr><th>Email</th><th>Step</th><th>State</th><th>When</th></tr>
+{% for s in recent_sends %}
+<tr><td>{{ s.email }}</td><td>{{ s.step }}</td><td>{{ s.state }}</td>
+    <td class="muted">{{ s.sent_at or s.reserved_at }}</td></tr>
+{% else %}
+<tr><td colspan="4" class="muted">Nothing sent yet.</td></tr>
+{% endfor %}
+</table>
+
+<details>
+  <summary>Add more leads to this campaign</summary>
+  <form method="post" action="/campaigns/{{ c.id }}/add-leads" enctype="multipart/form-data">
+    <label>File (.csv or .xlsx)<input type="file" name="sheet" required></label>
+    <button>Upload and add</button>
+  </form>
+</details>
+
+{% set current = {} %}
+{% for s in steps %}{% set _ = current.update({s.step: s}) %}{% endfor %}
+<details>
+  <summary>Edit this campaign's emails</summary>
+  <form method="post" action="/campaigns/{{ c.id }}/steps">
+    <div class="card">
+      <strong>Initial email</strong>
+      <label>Subject<input type="text" name="initial_subject" value="{{ current.get(0).subject if current.get(0) else '' }}" required></label>
+      <label>Body<textarea name="initial_body" rows="6" required>{{ current.get(0).body if current.get(0) else '' }}</textarea></label>
+    </div>
+    {% for n in [1, 2, 3] %}
+    <div class="card">
+      <strong>Follow-up {{ n }} <span class="muted">(leave both fields blank to skip)</span></strong>
+      <label>Subject<input type="text" name="followup{{ n }}_subject" value="{{ current.get(n).subject if current.get(n) else '' }}"></label>
+      <label>Body<textarea name="followup{{ n }}_body" rows="5">{{ current.get(n).body if current.get(n) else '' }}</textarea></label>
+    </div>
+    {% endfor %}
+    <label>Gap days between steps<input type="number" name="gap_days" value="{{ c.gap_days }}" min="1"></label>
+    <label>Use windowed send times for &mdash; a checked country only sends during its window
+           (set on the Country windows page); unchecked sends anytime:</label>
+    <label style="font-weight:400">
+      {% for code in ['AU', 'UK', 'CA', 'US'] %}
+      <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+        <input type="checkbox" name="windowed_countries" value="{{ code }}" style="width:auto;display:inline-block"
+               {{ 'checked' if code in active_countries }}> {{ code }}
+      </label>
+      {% endfor %}
+      <label style="display:inline-block;width:auto;font-weight:400">
+        <input type="checkbox" onclick="this.form.querySelectorAll('input[name=windowed_countries]').forEach(b=>b.checked=this.checked)" style="width:auto;display:inline-block"> All
+      </label>
+    </label>
+    <label>Which email addresses may send this campaign &mdash; leave all unchecked to use any enabled inbox:</label>
+    <label style="font-weight:400">
+      {% for ibx in inboxes %}
+      <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+        <input type="checkbox" name="allowed_inboxes" value="{{ ibx.id }}" style="width:auto;display:inline-block"
+               {{ 'checked' if ibx.id in active_inbox_ids }}> {{ ibx.email }}
+      </label>
+      {% else %}
+      <span class="muted">No inboxes added yet.</span>
+      {% endfor %}
+    </label>
+    <label>Daily cap for this campaign (blank = none)<input type="text" name="daily_cap" value="{{ c.daily_cap or '' }}"></label>
+    <button class="start">Save</button>
+  </form>
+</details>
+{% endblock %}

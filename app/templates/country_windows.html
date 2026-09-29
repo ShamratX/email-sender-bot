@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Country send windows</h1>
+<p class="note">One shared campaign can send to all four countries at once &mdash; each lead is only sent to
+during its own country's window below, read from the <code>country</code> column in your sheet automatically.
+Each window is set in that country's own local time zone &mdash; no manual conversion needed. Turn this on
+per campaign with the "Respect per-country send windows" checkbox when creating or editing a campaign on the
+<a href="/campaigns">Campaigns page</a>.</p>
+
+<form method="post" action="/country-windows">
+  <div class="card">
+    <h2>AU</h2>
+    <label>Start<input type="text" name="au_start" value="{{ country_windows.AU[0] }}"></label>
+    <label>End<input type="text" name="au_end" value="{{ country_windows.AU[1] }}"></label>
+    <label>Time zone (IANA name)<input type="text" name="au_tz" value="{{ country_timezones.AU }}"></label>
+  </div>
+  <div class="card">
+    <h2>UK</h2>
+    <label>Start<input type="text" name="uk_start" value="{{ country_windows.UK[0] }}"></label>
+    <label>End<input type="text" name="uk_end" value="{{ country_windows.UK[1] }}"></label>
+    <label>Time zone<input type="text" name="uk_tz" value="{{ country_timezones.UK }}"></label>
+  </div>
+  <div class="card">
+    <h2>CA</h2>
+    <label>Start<input type="text" name="ca_start" value="{{ country_windows.CA[0] }}"></label>
+    <label>End<input type="text" name="ca_end" value="{{ country_windows.CA[1] }}"></label>
+    <label>Time zone<input type="text" name="ca_tz" value="{{ country_timezones.CA }}"></label>
+  </div>
+  <div class="card">
+    <h2>US</h2>
+    <label>Start<input type="text" name="us_start" value="{{ country_windows.US[0] }}"></label>
+    <label>End<input type="text" name="us_end" value="{{ country_windows.US[1] }}"></label>
+    <label>Time zone<input type="text" name="us_tz" value="{{ country_timezones.US }}"></label>
+  </div>
+  <button class="start">Save all four</button>
+</form>
+
+<p class="muted">Your own timezone (used for testing, warm-up daily limits, and any campaign not using
+country windows) is set on the <a href="/settings">Settings page</a>.</p>
+{% endblock %}

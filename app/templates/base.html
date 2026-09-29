@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}Email Sender Bot{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+{% block head %}{% endblock %}
+</head>
+<body>
+<header>
+  <strong>Email Sender Bot</strong>
+  <nav>
+    <a href="/" class="{{ 'active' if request.url.path == '/' }}">Dashboard</a>
+    <a href="/leads" class="{{ 'active' if request.url.path.startswith('/leads') }}">Leads</a>
+    <a href="/campaigns" class="{{ 'active' if request.url.path.startswith('/campaigns') }}">Campaigns</a>
+    <a href="/country-windows" class="{{ 'active' if request.url.path == '/country-windows' }}">Country windows</a>
+    <a href="/followups" class="{{ 'active' if request.url.path == '/followups' }}">Follow-ups{% if followups_due %} ({{ followups_due }}){% endif %}</a>
+    <a href="/inboxes" class="{{ 'active' if request.url.path == '/inboxes' }}">Inboxes</a>
+    <a href="/suppression" class="{{ 'active' if request.url.path == '/suppression' }}">Suppression</a>
+    <a href="/settings" class="{{ 'active' if request.url.path == '/settings' }}">Settings</a>
+  </nav>
+</header>
+<main>
+{% block body %}{% endblock %}
+</main>
+</body>
+</html>

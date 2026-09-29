@@ -1,0 +1,287 @@
+/* Glass design + 3D buttons. Plain CSS, no framework, no JS. */
+
+* { box-sizing: border-box; }
+
+:root {
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a46;
+  --muted: #797973;
+  --line: rgba(30, 28, 20, 0.10);
+  --bg-a: #eef1f6;
+  --bg-b: #f7ece0;
+  --glass: rgba(255, 255, 255, 0.55);
+  --glass-strong: rgba(255, 255, 255, 0.72);
+  --accent: #2b6e4f;
+  --accent-2: #3f8f68;
+  --danger: #b3382c;
+  --danger-2: #cc4a3c;
+  --warn-bg: rgba(253, 240, 201, 0.65);
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font: 15px/1.6 -apple-system, "Segoe UI", Inter, Arial, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1100px 600px at 10% -10%, #dfe9ff 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, #ffe8d6 0%, transparent 55%),
+    linear-gradient(180deg, var(--bg-a), var(--bg-b));
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  background: var(--glass-strong);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 24px rgba(30,28,20,0.06);
+  padding: 14px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+header strong { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+header strong::before { content: "\2709  "; }
+
+/* pill-shaped nav container, like a rounded capsule menu bar */
+nav {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-radius: 999px;
+  padding: 5px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 2px 8px rgba(30,28,20,0.06);
+}
+nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 8px 14px;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+nav a:hover { color: var(--ink); background: rgba(255,255,255,0.8); }
+nav a.active { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; }
+
+main { max-width: 900px; margin: 0 auto; padding: 36px 28px 60px; }
+
+h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.015em; margin: 0 0 22px; }
+h2 { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+     color: var(--muted); margin: 34px 0 12px; }
+h2:first-of-type { margin-top: 0; }
+
+/* --- glass panels: tables and cards share the same frosted surface --- */
+table, .card, .note, .switch {
+  background: var(--glass);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.7) inset,
+    0 10px 30px rgba(30,28,20,0.08),
+    0 2px 6px rgba(30,28,20,0.05);
+}
+
+table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 22px; border-radius: var(--radius-lg); overflow: hidden; }
+th, td { text-align: left; padding: 11px 14px; font-size: 14px; vertical-align: top; }
+tr:has(th) th {
+  font-weight: 700; color: var(--muted); font-size: 11.5px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.35);
+  border-bottom: 1px solid var(--line);
+}
+tr:has(td) { border-bottom: 1px solid var(--line); transition: background 0.12s ease; }
+tr:has(td):hover { background: rgba(255,255,255,0.35); }
+tr:has(td):last-child { border-bottom: none; }
+tr.total td { font-weight: 800; }
+td a { color: var(--accent); text-decoration: none; font-weight: 700; }
+td a:hover { text-decoration: underline; }
+
+.muted { color: var(--muted); font-size: 13px; }
+.error { color: var(--danger); font-weight: 700; }
+.note {
+  background: var(--warn-bg);
+  border-radius: var(--radius);
+  padding: 12px 16px; font-size: 13.5px; color: #6b5518; margin-bottom: 18px;
+  border-color: rgba(224, 180, 0, 0.35);
+}
+
+.card { border-radius: var(--radius-lg); padding: 22px 24px; margin-bottom: 18px; }
+.card h2 { margin-top: 0; }
+
+label { display: block; margin-bottom: 15px; font-size: 13.5px; font-weight: 700; color: var(--ink-soft); }
+
+input[type=text], input[type=email], input[type=number], input[type=file],
+textarea, select {
+  display: block; width: 100%; padding: 10px 12px; margin-top: 6px;
+  border: 1px solid rgba(30,28,20,0.14); border-radius: var(--radius);
+  font: 14px/1.4 inherit; font-weight: 400; color: var(--ink);
+  background: rgba(255,255,255,0.75);
+  box-shadow: 0 1px 2px rgba(30,28,20,0.05) inset;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--accent); background: #fff;
+  box-shadow: 0 0 0 4px rgba(43,110,79,0.14);
+}
+textarea { font-family: ui-monospace, Consolas, monospace; font-size: 13px; resize: vertical; }
+
+/* --- 3D buttons: raised, pressable, glassy highlight on top --- */
+button {
+  position: relative;
+  padding: 10px 18px;
+  border: 1px solid rgba(30,28,20,0.14);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #ffffff 0%, #edeee9 100%);
+  font: 14px inherit; font-weight: 700; color: var(--ink);
+  cursor: pointer;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.9) inset,
+    0 1px 2px rgba(30,28,20,0.06),
+    0 4px 0 rgba(30,28,20,0.10),
+    0 8px 14px rgba(30,28,20,0.10);
+  transform: translateY(0);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+button:hover { background: linear-gradient(180deg, #ffffff 0%, #f4f5f0 100%); }
+button:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.7) inset,
+    0 1px 1px rgba(30,28,20,0.08);
+}
+
+button.start {
+  background: linear-gradient(180deg, var(--accent-2) 0%, var(--accent) 100%);
+  color: #fff; border-color: #1f5b40;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.35) inset,
+    0 4px 0 #1f5b40,
+    0 10px 18px rgba(43,110,79,0.35);
+}
+button.start:hover { background: linear-gradient(180deg, #46a077 0%, var(--accent-2) 100%); }
+button.start:active { box-shadow: 0 1px 0 rgba(255,255,255,0.25) inset, 0 1px 2px rgba(31,91,64,0.4); }
+
+button.stop {
+  background: linear-gradient(180deg, var(--danger-2) 0%, var(--danger) 100%);
+  color: #fff; border-color: #8a291f;
+  font-size: 17px; padding: 15px 32px; font-weight: 800; border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.35) inset,
+    0 5px 0 #8a291f,
+    0 14px 24px rgba(179,56,44,0.4);
+}
+button.stop:hover { background: linear-gradient(180deg, #d85c4d 0%, var(--danger-2) 100%); }
+button.stop:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset, 0 1px 2px rgba(138,41,31,0.4); }
+
+form.inline { display: inline-block; margin-right: 8px; margin-bottom: 8px; }
+form.inline input, form.inline select { display: inline-block; width: auto; margin-top: 0; }
+
+.actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.actions form { margin: 0; }
+button.danger { border-color: var(--danger); color: var(--danger); background: rgba(179,56,44,0.06); }
+button.danger:hover { background: rgba(179,56,44,0.12); }
+
+.switch {
+  display: flex; align-items: center; gap: 18px; padding: 20px 24px;
+  border-radius: 18px; margin-bottom: 26px;
+}
+.switch span { font-weight: 800; font-size: 16px; display: flex; align-items: center; gap: 9px; }
+.switch span::before {
+  content: ""; width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  box-shadow: 0 0 0 4px currentColor, 0 0 12px currentColor;
+  opacity: 0.9;
+}
+.switch.on span { color: var(--danger); }
+.switch.off span { color: var(--muted); }
+
+.barcell { width: 180px; }
+.bar { background: rgba(30,28,20,0.08); height: 9px; border-radius: 5px; overflow: hidden; box-shadow: 0 1px 2px rgba(30,28,20,0.1) inset; }
+.bar div { background: linear-gradient(90deg, var(--accent), var(--accent-2)); height: 100%; border-radius: 5px; transition: width 0.3s ease; }
+.bar div.danger { background: linear-gradient(90deg, var(--danger), var(--danger-2)); }
+
+pre {
+  background: rgba(255,255,255,0.55); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 13px 15px; white-space: pre-wrap; font-size: 13px; line-height: 1.55;
+}
+code { background: rgba(43,110,79,0.12); color: var(--accent); border-radius: 5px; padding: 2px 7px; font-size: 12.5px; font-weight: 700; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 26px 0; }
+
+details { margin-bottom: 12px; }
+details > summary { cursor: pointer; font-weight: 700; padding: 4px 0; }
+details form { margin-top: 10px; }
+
+/* --- responsive --- */
+
+@media (max-width: 900px) {
+  main { max-width: 100%; padding: 28px 20px 50px; }
+}
+
+@media (max-width: 640px) {
+  body { background-attachment: scroll; }
+  main { padding: 18px 14px 40px; }
+  header { padding: 10px 14px; gap: 6px; }
+  header strong { font-size: 14px; }
+  nav a { padding: 6px 9px; font-size: 12.5px; }
+
+  h1 { font-size: 19px; margin-bottom: 16px; }
+  h2 { font-size: 12px; margin: 26px 0 10px; }
+
+  .card { padding: 16px 16px; border-radius: var(--radius); }
+  .switch { flex-direction: column; align-items: stretch; text-align: center; padding: 16px; gap: 12px; }
+  .switch span { justify-content: center; }
+
+  table, thead, tbody, th, td, tr { display: block; }
+  tr:has(th) { display: none; }
+  tr:has(td) {
+    border: 1px solid var(--line); border-radius: var(--radius);
+    margin-bottom: 10px; padding: 4px 12px; background: var(--glass);
+  }
+  td { padding: 8px 0; border: 0; }
+  td:empty { display: none; }
+  .barcell { width: 100%; }
+
+  form.inline { display: block; width: 100%; margin-right: 0; }
+  form.inline button { width: 100%; }
+  .actions { flex-direction: column; align-items: stretch; }
+  .actions form, .actions a { width: 100%; text-align: center; }
+
+  button { width: 100%; }
+  button.stop { font-size: 16px; padding: 14px 20px; }
+
+  input[type=text], input[type=email], input[type=number], input[type=file],
+  textarea, select { font-size: 16px; } /* prevents iOS auto-zoom on focus */
+}
+
+@media (max-width: 400px) {
+  h1 { font-size: 17px; }
+  .card { padding: 14px 12px; }
+}
+
+/* When "respect per-country windows" is checked, its own window_start/end
+   fields are ignored by the backend -- grey them out so the form doesn't
+   look like it's asking for two contradictory things at once. Pure CSS,
+   no JS: relies on :has(), supported in all current browsers. */
+form:has(input[name="respect_country_windows"]:checked) label:has(input[name="window_start"]),
+form:has(input[name="respect_country_windows"]:checked) label:has(input[name="window_end"]) {
+  opacity: 0.4;
+}
+form:has(input[name="respect_country_windows"]:checked) label:has(input[name="window_start"]) input,
+form:has(input[name="respect_country_windows"]:checked) label:has(input[name="window_end"]) input {
+  background: rgba(30,28,20,0.04);
+}

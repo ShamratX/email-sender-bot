@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Settings</h1>
+<form method="post" action="/settings">
+  <label>Timezone<input type="text" name="timezone" value="{{ values.timezone }}"></label>
+  <label>Send mode
+    <select name="send_mode">
+      <option value="fake" {{ 'selected' if values.send_mode == 'fake' }}>fake &mdash; nothing actually sent</option>
+      <option value="live" {{ 'selected' if values.send_mode == 'live' }}>live &mdash; real emails via Resend</option>
+    </select></label>
+  <label>Minimum delay between sends (seconds)<input type="number" name="delay_min_seconds" value="{{ values.delay_min_seconds }}"></label>
+  <label>Maximum delay between sends (seconds)<input type="number" name="delay_max_seconds" value="{{ values.delay_max_seconds }}"></label>
+  <label>Postal address shown in the footer<input type="text" name="postal_address" value="{{ values.postal_address }}"></label>
+  <label>Unsubscribe address<input type="email" name="unsubscribe_email" value="{{ values.unsubscribe_email }}"></label>
+  <label>Check each address before sending
+    <select name="verify_before_send">
+      <option value="1" {{ 'selected' if values.verify_before_send == '1' }}>Yes &mdash; skip invalid syntax and dead domains (free, built-in)</option>
+      <option value="0" {{ 'selected' if values.verify_before_send == '0' }}>No &mdash; send to everyone that isn't suppressed</option>
+    </select></label>
+  <label>Send on weekends
+    <select name="skip_weekends">
+      <option value="1" {{ 'selected' if values.skip_weekends == '1' }}>No &mdash; pause all sending on Saturday and Sunday (default)</option>
+      <option value="0" {{ 'selected' if values.skip_weekends == '0' }}>Yes &mdash; send every day including weekends</option>
+    </select></label>
+  <button>Save</button>
+</form>
+<p class="{{ 'muted' if has_key else 'error' }}">RESEND_API_KEY is {{ 'set' if has_key else 'NOT set' }} in .env. Live mode needs it.</p>
+{% endblock %}

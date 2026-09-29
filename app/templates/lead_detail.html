@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>{{ lead.email }}</h1>
+{% if suppressed %}<p class="error">Suppressed. Nothing further will be sent to this address.</p>{% endif %}
+
+<h2>Fields</h2>
+<form method="post" action="/leads/{{ lead.id }}/edit">
+  {% for k, v in fields.items() %}
+  <label>{{ k }}<input type="text" name="field_{{ k }}" value="{{ v }}"></label>
+  {% endfor %}
+  <button>Save fields</button>
+</form>
+
+<h2>Send history</h2>
+{% for s in sends %}
+<div class="card">
+  <p><strong>Step {{ s.step }}</strong> &mdash; {{ s.state }} &mdash; {{ s.sent_at or s.reserved_at }} &mdash; campaign {{ s.campaign }}</p>
+  <p>Subject: {{ s.subject_used or '' }}</p>
+  <pre>{{ s.body_rendered or s.error or '' }}</pre>
+</div>
+{% else %}
+<p class="muted">No emails sent to this lead.</p>
+{% endfor %}
+
+<hr>
+<form method="post" action="/leads/{{ lead.id }}/delete" onsubmit="return confirm('Delete this lead? Send history for it is kept for audit, only the lead record itself is removed.');">
+  <button style="border-color:#b3241c;color:#b3241c">Delete this lead</button>
+</form>
+{% endblock %}

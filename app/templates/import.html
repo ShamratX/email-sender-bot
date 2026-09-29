@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Upload a sheet</h1>
+<p class="note"><strong>Imports only add.</strong> No import deletes a lead, clears send history, or removes a suppression.</p>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{% if preview %}
+<h2>Preview: {{ preview.filename }}</h2>
+<p>{{ preview.total }} rows read. Email column: <strong>{{ preview.column }}</strong></p>
+<table>
+<tr><th>New</th><th>Already in database</th><th>On suppression list</th><th>Invalid email</th><th>Duplicated in file</th></tr>
+<tr><td>{{ preview.stats.new }}</td><td>{{ preview.stats.existing }}</td><td>{{ preview.stats.suppressed }}</td>
+    <td>{{ preview.stats.invalid }}</td><td>{{ preview.stats.duplicate_in_file }}</td></tr>
+</table>
+<table>
+<tr><th>Email</th><th>Status</th></tr>
+{% for row in preview.sample %}
+<tr><td>{{ row.email }}</td>
+    <td>{% if row.suppressed %}suppressed{% elif row.exists %}existing{% else %}new{% endif %}</td></tr>
+{% endfor %}
+</table>
+<p class="muted">Showing first {{ preview.sample|length }} of {{ preview.total }} rows &mdash; column data isn't shown here, just import status.</p>
+<form method="post" action="/import/confirm">
+  <input type="hidden" name="saved" value="{{ preview.saved }}">
+  <input type="hidden" name="column" value="{{ preview.column }}">
+  <input type="hidden" name="list_name" value="{{ preview.list_name }}">
+  <label>Leads already in the database:
+    <select name="on_existing">
+      <option value="skip">Skip them (safest)</option>
+      <option value="fill_blanks">Fill blank fields only</option>
+      <option value="update">Update their fields</option>
+    </select></label>
+  <button class="start">Import</button>
+</form>
+<hr>
+{% endif %}
+
+<form method="post" action="/import" enctype="multipart/form-data">
+  <label>File (.csv or .xlsx)<input type="file" name="sheet" required></label>
+  <label>Add to list<input type="text" name="list_name" value="default" required></label>
+  <label>Email column (leave blank to guess)<input type="text" name="email_column" value=""></label>
+  <button>Preview</button>
+</form>
+
+<h2>Past imports</h2>
+<table>
+<tr><th>When</th><th>File</th><th>Result</th></tr>
+{% for row in history %}
+<tr><td class="muted">{{ row.created_at }}</td><td>{{ row.filename }}</td><td class="muted">{{ row.summary }}</td></tr>
+{% else %}
+<tr><td colspan="3" class="muted">None yet.</td></tr>
+{% endfor %}
+</table>
+{% endblock %}

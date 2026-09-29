@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Suppression ({{ total }})</h1>
+<p class="note">Permanent by design &mdash; no delete/edit here, even though the rest of the app is editable.
+Removing a bounce/complaint/unsubscribe record risks emailing someone who opted out or doesn't exist. If you
+truly need to remove one (e.g. you suppressed the wrong address by mistake), do it directly in <code>state/sender.db</code>
+with a SQLite tool, not through the UI.</p>
+<form method="get" class="inline"><input type="text" name="q" value="{{ q }}" placeholder="search"><button>Search</button></form>
+<div class="card">
+<form method="post" action="/suppression">
+  <label>Add addresses (one per line)<textarea name="emails" rows="4"></textarea></label>
+  <label>Reason<select name="reason">
+    <option value="manual">manual</option><option value="unsubscribe">unsubscribe</option>
+    <option value="hard_bounce">hard bounce</option><option value="complaint">complaint</option>
+    <option value="replied">replied</option></select></label>
+  <button>Add</button>
+</form>
+</div>
+<table>
+<tr><th>Email</th><th>Reason</th><th>When</th></tr>
+{% for row in rows %}
+<tr><td>{{ row.email }}</td><td>{{ row.reason }}</td><td class="muted">{{ row.created_at }}</td></tr>
+{% else %}
+<tr><td colspan="3" class="muted">Empty.</td></tr>
+{% endfor %}
+</table>
+{% endblock %}

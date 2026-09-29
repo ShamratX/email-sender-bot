@@ -1,0 +1,29 @@
+{
+  "templates": {
+    "initial": {
+      "subjects": [
+        "Quick question about {{business_name}}",
+        "Helping {{business_name}} get found in {{search_location}}"
+      ],
+      "body": "Hi {{business_name}},\n\nI noticed your {{star_rating}}-star rating from {{review_count}} reviews in {{search_location}} -- that's a strong track record. We list local businesses so nearby customers find you first, before your competitors.\n\nWorth a quick look?\n\nTownloc"
+    },
+    "follow_up_1": {
+      "subjects": [
+        "Following up, {{business_name}}"
+      ],
+      "body": "Hi {{business_name}}, circling back on my note about {{search_location}}. With {{review_count}} reviews already, you're already doing the hard part -- we just help more people find you.\n\nTownloc"
+    },
+    "follow_up_2": {
+      "subjects": [
+        "Last check-in, {{business_name}}"
+      ],
+      "body": "Hi {{business_name}}, one more note before I stop reaching out. Businesses with a {{star_rating}}-star rating like yours tend to see the biggest lift when more people in {{search_location}} can find them.\n\nHappy to share details if useful, otherwise no worries.\n\nTownloc"
+    },
+    "follow_up_3": {
+      "subjects": [
+        "Closing the loop, {{business_name}}"
+      ],
+      "body": "Hi {{business_name}},\n\nThis is my last note -- I noticed your {{star_rating}}-star rating from {{review_count}} reviews in {{search_location}} and still think we could help more people in the area find you.\n\nIf now isn't the right time, no problem at all. If it is, just reply and I'll share the details.\n\nTownloc"
+    }
+  }
+}

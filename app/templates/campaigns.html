@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Campaigns</h1>
+<p class="muted">Each campaign is self-contained &mdash; its own leads, its own emails, its own dashboard. Nothing to match up across pages.</p>
+{% if msg %}<p class="note">{{ msg }}</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{% for c in rows %}
+<div class="card">
+  <h2><a href="/campaigns/{{ c.id }}">{{ c.name }}</a> <span class="muted">({{ c.state }})</span></h2>
+  {% set active_countries = (c.windowed_countries or '').split(',') | select | list %}
+  {% set active_inbox_ids = (c.allowed_inboxes or '').split(',') | select | map('int') | list %}
+  {% set active_inbox_names = inboxes | selectattr('id', 'in', active_inbox_ids) | map(attribute='email') | list %}
+  <p class="muted">Leads: {{ c.list_name }} &middot;
+     {% if active_countries %}windowed: {{ active_countries | join(', ') }}{% else %}sends anytime{% endif %}
+     &middot; gap {{ c.gap_days }} days &middot; follow-ups {{ c.followup_mode }} &middot; sent {{ c.sent }}
+     &middot; sending from: {{ active_inbox_names | join(', ') if active_inbox_names else 'any enabled' }}</p>
+  <div class="actions">
+    <form method="post" action="/campaigns/{{ c.id }}/run" class="inline"><button>Run</button></form>
+    <form method="post" action="/campaigns/{{ c.id }}/pause" class="inline"><button>Pause</button></form>
+    <a href="/campaigns/{{ c.id }}">Open dashboard &rarr;</a>
+  </div>
+</div>
+{% else %}
+<p class="muted">None yet &mdash; create one below.</p>
+{% endfor %}
+
+<div class="card">
+<h2>How personalization works</h2>
+<p class="muted">Type <code>{{ '{{' }}Column Name{{ '}}' }}</code> in the subject or body &mdash; it matches a column header from your uploaded sheet exactly, case-insensitive. Works with any sheet, any columns; nothing is fixed to one lead source.</p>
+<p class="muted"><strong>Example</strong> &mdash; sheet with columns <code>business_name, city, rating</code>:</p>
+<pre>Subject: Quick question about {{ '{{' }}business_name{{ '}}' }}
+Body: Hi {{ '{{' }}business_name{{ '}}' }}, I noticed your {{ '{{' }}rating{{ '}}' }}-star rating
+in {{ '{{' }}city{{ '}}' }}. Worth a quick look?</pre>
+<p class="muted">Only requirement: an <code>email</code> column (any name containing "mail" is auto-detected). Every other column is optional &mdash; use what you need, skip the rest. If a template uses a variable your sheet doesn't have, saving is blocked with the exact missing name so nothing sends blank.</p>
+</div>
+
+<div class="card">
+<h2>New campaign</h2>
+<form method="post" action="/campaigns" enctype="multipart/form-data">
+  <label>Campaign name (e.g. "Amazon Sellers", "Local Business")<input type="text" name="name" required></label>
+  <label>Upload leads (.csv or .xlsx) &mdash; or skip and add later<input type="file" name="sheet"></label>
+
+  <div class="card">
+    <strong>Initial email</strong>
+    <label>Subject<input type="text" name="initial_subject" required></label>
+    <label>Body<textarea name="initial_body" rows="6" required></textarea></label>
+  </div>
+  {% for n in [1, 2, 3] %}
+  <div class="card">
+    <strong>Follow-up {{ n }} <span class="muted">(leave both fields blank to skip)</span></strong>
+    <label>Subject<input type="text" name="followup{{ n }}_subject"></label>
+    <label>Body<textarea name="followup{{ n }}_body" rows="5"></textarea></label>
+  </div>
+  {% endfor %}
+
+  <label>Gap days between steps<input type="number" name="gap_days" value="3" min="1"></label>
+  <label>Use windowed send times for &mdash; a checked country only sends during its window
+         (set on the Country windows page); unchecked sends anytime. One campaign can cover all four:</label>
+  <label style="font-weight:400">
+    {% for code in ['AU', 'UK', 'CA', 'US'] %}
+    <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+      <input type="checkbox" name="windowed_countries" value="{{ code }}" style="width:auto;display:inline-block"> {{ code }}
+    </label>
+    {% endfor %}
+    <label style="display:inline-block;width:auto;font-weight:400">
+      <input type="checkbox" onclick="this.form.querySelectorAll('input[name=windowed_countries]').forEach(b=>b.checked=this.checked)" style="width:auto;display:inline-block"> All
+    </label>
+  </label>
+  <label>Which email addresses may send this campaign &mdash; leave all unchecked to use any enabled inbox:</label>
+  <label style="font-weight:400">
+    {% for ibx in inboxes %}
+    <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+      <input type="checkbox" name="allowed_inboxes" value="{{ ibx.id }}" style="width:auto;display:inline-block"> {{ ibx.email }}
+    </label>
+    {% else %}
+    <span class="muted">No inboxes added yet &mdash; add some on the Inboxes page first.</span>
+    {% endfor %}
+  </label>
+  <label>Follow-ups<select name="followup_mode">
+    <option value="manual">manual &mdash; I click send</option>
+    <option value="auto">auto</option></select></label>
+  <label>Daily cap for this campaign (blank = none)<input type="text" name="daily_cap"></label>
+  <button class="start">Create campaign</button>
+</form>
+</div>
+{% endblock %}

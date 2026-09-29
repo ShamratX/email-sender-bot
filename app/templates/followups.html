@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Follow-ups due ({{ rows | length }})</h1>
+<p class="muted">A follow-up becomes due when the previous email was actually sent, the gap has passed,
+and the lead has not replied, bounced, complained or unsubscribed.</p>
+<form method="post" action="/followups/send-now"><button class="start">Send all due follow-ups now</button></form>
+<table>
+<tr><th>Email</th><th>Campaign</th><th>Step</th><th>Previous sent</th><th>Days since</th></tr>
+{% for row in rows %}
+<tr><td>{{ row.email }}</td><td>{{ row.campaign }}</td><td>{{ row.step }}</td>
+    <td class="muted">{{ row.previous_sent_at }}</td><td>{{ row.days_since }}</td></tr>
+{% else %}
+<tr><td colspan="5" class="muted">Nothing due.</td></tr>
+{% endfor %}
+</table>
+{% endblock %}
