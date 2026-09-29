@@ -10,13 +10,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from . import auth, clock, config_file, db, engine, importer, templating, warmup, worker
+from . import auth, clock, config_file, db, engine, importer, templating, warmup, webhooks, worker
 from .resend_client import build_client
 
 BASE = Path(__file__).resolve().parent
 UPLOADS = BASE.parent / "state" / "uploads"
 
-PUBLIC_PATHS = {"/login"}
+PUBLIC_PATHS = {"/login", "/webhooks/resend"}
 
 app = FastAPI(title="Email Sender Bot")
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -89,6 +89,27 @@ def logout():
     response = RedirectResponse("/login", status_code=303)
     response.delete_cookie(auth.COOKIE_NAME)
     return response
+
+
+@app.post("/webhooks/resend")
+async def resend_webhook(request: Request):
+    """Public (no login) -- Resend can't authenticate as you. Signature
+    verification is what stops anyone else from poisoning the suppression
+    list, so an unsigned or bad-signature request is rejected outright."""
+    payload = await request.body()
+    try:
+        webhooks.verify(
+            payload,
+            request.headers.get("svix-id", ""),
+            request.headers.get("svix-timestamp", ""),
+            request.headers.get("svix-signature", ""),
+        )
+    except webhooks.InvalidSignature as exc:
+        db.log_event("webhook_rejected", None, {"error": str(exc)})
+        return HTMLResponse(status_code=401, content="invalid signature")
+    event = json.loads(payload)
+    webhooks.handle_event(event)
+    return HTMLResponse(status_code=200, content="ok")
 
 
 def page(request: Request, name: str, **context) -> HTMLResponse:
