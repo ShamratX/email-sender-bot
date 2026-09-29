@@ -277,6 +277,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE inboxes ADD COLUMN api_key TEXT")
     if "account_id" not in inbox_columns:
         conn.execute("ALTER TABLE inboxes ADD COLUMN account_id INTEGER")
+    if "daily_limit" not in inbox_columns:
+        # Manual per-inbox override, typed in and bumped up by hand week to
+        # week -- NULL means "no override", falls back to the week-derived
+        # schedule below, unchanged from before this column existed.
+        conn.execute("ALTER TABLE inboxes ADD COLUMN daily_limit INTEGER")
 
     account_columns = {row["name"] for row in conn.execute("PRAGMA table_info(accounts)").fetchall()}
     if "warmup_start_date" not in account_columns:

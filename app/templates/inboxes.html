@@ -47,13 +47,20 @@ no need to paste the same key into every inbox.</p>
 </div>
 
 <table>
-<tr><th>Inbox</th><th>Name</th><th>Account</th><th>Today</th><th>Enabled</th><th>Actions</th></tr>
+<tr><th>Inbox</th><th>Name</th><th>Account</th><th>Today</th><th>Daily limit</th><th>Enabled</th><th>Actions</th></tr>
 {% for row in rows %}
 <tr>
   <td>{{ row.email }}</td>
   <td>{{ row.name }}</td>
   <td>{{ row.account_name or 'default (.env)' }}</td>
   <td>{% for q in quota.inboxes %}{% if q.id == row.id %}{{ q.used }}/{{ q.limit }}{% endif %}{% endfor %}</td>
+  <td>
+    <form method="post" action="/inboxes/{{ row.id }}/limit" class="inline">
+      <input type="number" name="daily_limit" value="{{ row.daily_limit if row.daily_limit is not none else '' }}"
+             placeholder="auto" style="width:70px">
+      <button>Save</button>
+    </form>
+  </td>
   <td>{{ 'yes' if row.enabled else 'no' }}</td>
   <td>
     <details>
@@ -76,7 +83,7 @@ no need to paste the same key into every inbox.</p>
   </td>
 </tr>
 {% else %}
-<tr><td colspan="6" class="muted">None yet.</td></tr>
+<tr><td colspan="7" class="muted">None yet.</td></tr>
 {% endfor %}
 </table>
 

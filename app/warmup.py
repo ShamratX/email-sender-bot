@@ -62,6 +62,15 @@ def per_inbox_limit_for(account_id: int | None, today: date | None = None) -> in
     return int(schedule.get("4+", 35))
 
 
+def per_inbox_limit_for_inbox(inbox, today: date | None = None) -> int:
+    """An inbox's own manually-typed daily_limit wins over the week-derived
+    schedule, if set -- for operators who'd rather bump one number up by hand
+    each week than manage warm-up start dates and schedules."""
+    if inbox["daily_limit"] is not None:
+        return int(inbox["daily_limit"])
+    return per_inbox_limit_for(inbox["account_id"], today)
+
+
 def account_cap_for(account_id: int | None) -> int:
     _, _, cap = _resolve_account_config(account_id)
     return cap
@@ -157,7 +166,7 @@ def quota_report(day: str | None = None) -> dict:
     rows = []
     for inbox in enabled_inboxes():
         account_id = inbox["account_id"]
-        limit = per_inbox_limit_for(account_id, None)
+        limit = per_inbox_limit_for_inbox(inbox, None)
         used = sent_today(inbox["id"], day)
         rows.append(
             {
@@ -218,7 +227,7 @@ def pick_inbox(day: str | None = None, allowed_ids: set[int] | None = None):
         if account_sent_today(account_id, day) >= account_cap_for(account_id):
             account_blocked += 1
             continue  # this inbox's account is maxed out today -- try the next inbox
-        limit = per_inbox_limit_for(account_id, None)
+        limit = per_inbox_limit_for_inbox(inbox, None)
         if sent_today(inbox["id"], day) < limit:
             db.set_setting(cursor_key, (index + 1) % count)
             return inbox, None

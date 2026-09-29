@@ -925,6 +925,18 @@ def inbox_add(
     return back("/inboxes")
 
 
+@app.post("/inboxes/{inbox_id}/limit")
+def inbox_limit_save(inbox_id: int, daily_limit: str = Form("")):
+    """Manual weekly bump: a raw number the operator sets by hand, overriding
+    the week-derived schedule for just this inbox. Blank clears the override
+    and goes back to the automatic schedule."""
+    db.connect().execute(
+        "UPDATE inboxes SET daily_limit=? WHERE id=?",
+        (int(daily_limit) if daily_limit.strip() else None, inbox_id),
+    )
+    return back("/inboxes")
+
+
 @app.post("/inboxes/{inbox_id}/toggle")
 def inbox_toggle(inbox_id: int):
     db.connect().execute(
