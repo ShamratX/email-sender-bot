@@ -18,14 +18,17 @@ no need to paste the same key into every inbox.</p>
     <details>
       <summary>Edit warm-up</summary>
       <form method="post" action="/accounts/{{ a.id }}/warmup">
-        <label>This account's own warm-up start date (blank = use the global one on the Warm-up card below)
-          <input type="text" name="warmup_start_date" value="{{ a.warmup_start_date or '' }}" placeholder="YYYY-MM-DD"></label>
-        <label>Week 1 per inbox/day (blank = use global)<input type="number" name="week1" value="{{ a_schedule.get('1', '') }}"></label>
-        <label>Week 2<input type="number" name="week2" value="{{ a_schedule.get('2', '') }}"></label>
-        <label>Week 3<input type="number" name="week3" value="{{ a_schedule.get('3', '') }}"></label>
-        <label>Week 4+<input type="number" name="week4" value="{{ a_schedule.get('4+', '') }}"></label>
         <label>This account's own daily cap, i.e. its Resend plan limit (blank = use global)
           <input type="number" name="daily_cap" value="{{ a.daily_cap if a.daily_cap is not none else '' }}"></label>
+        <details>
+          <summary>Advanced: this account's own automatic warm-up schedule (blank fields use the global one)</summary>
+          <label>Warm-up start date
+            <input type="text" name="warmup_start_date" value="{{ a.warmup_start_date or '' }}" placeholder="YYYY-MM-DD"></label>
+          <label>Week 1 per inbox/day<input type="number" name="week1" value="{{ a_schedule.get('1', '') }}"></label>
+          <label>Week 2<input type="number" name="week2" value="{{ a_schedule.get('2', '') }}"></label>
+          <label>Week 3<input type="number" name="week3" value="{{ a_schedule.get('3', '') }}"></label>
+          <label>Week 4+<input type="number" name="week4" value="{{ a_schedule.get('4+', '') }}"></label>
+        </details>
         <button>Save</button>
       </form>
     </details>
@@ -101,17 +104,24 @@ no need to paste the same key into every inbox.</p>
 </div>
 
 <div class="card">
-<h2>Warm-up</h2>
-<p class="muted">Current week: {{ quota.week }} &middot; per-inbox limit today: {{ quota.per_inbox_limit }}</p>
+<h2>Sending limits</h2>
+<p class="muted">Set each inbox's own daily number directly in the table above. These two boxes are the
+shared limits underneath that: the total your Resend plan allows per day, and a separate cap just for follow-ups.</p>
 <form method="post" action="/warmup">
-  <label>Warm-up start date (YYYY-MM-DD, blank = not tracked)<input type="text" name="start_date" value="{{ start_date }}"></label>
-  <label>Week 1 &mdash; per inbox per day<input type="number" name="week1" value="{{ schedule.get('1', 6) }}"></label>
-  <label>Week 2<input type="number" name="week2" value="{{ schedule.get('2', 12) }}"></label>
-  <label>Week 3<input type="number" name="week3" value="{{ schedule.get('3', 20) }}"></label>
-  <label>Week 4 and later<input type="number" name="week4" value="{{ schedule.get('4+', 35) }}"></label>
   <label>Account cap per day (your Resend plan limit)<input type="number" name="account_cap" value="{{ cap }}"></label>
   <label>Follow-up cap per day, separate from new sends (blank = no separate limit &mdash; follow-ups just
     share the caps above with new sends)<input type="number" name="followup_daily_cap" value="{{ followup_cap or '' }}"></label>
+
+  <details>
+    <summary>Advanced: automatic warm-up schedule (only used for inboxes with no Daily limit of their own set above)</summary>
+    <p class="muted">Current week: {{ quota.week }} &middot; today's automatic limit: {{ quota.per_inbox_limit }}</p>
+    <label>Warm-up start date (YYYY-MM-DD, blank = not tracked)<input type="text" name="start_date" value="{{ start_date }}"></label>
+    <label>Week 1 &mdash; per inbox per day<input type="number" name="week1" value="{{ schedule.get('1', 6) }}"></label>
+    <label>Week 2<input type="number" name="week2" value="{{ schedule.get('2', 12) }}"></label>
+    <label>Week 3<input type="number" name="week3" value="{{ schedule.get('3', 20) }}"></label>
+    <label>Week 4 and later<input type="number" name="week4" value="{{ schedule.get('4+', 35) }}"></label>
+  </details>
+
   <button>Save</button>
 </form>
 <p class="note">Four inboxes at 35/day is 140 &mdash; more than a 100/day plan allows. The account cap is checked first.</p>
