@@ -33,8 +33,8 @@ no need to paste the same key into every inbox.</p>
 <h2>Sending limits per mailbox</h2>
 <p class="muted">Defaults used by any inbox that doesn't set its own numbers below.</p>
 <form method="post" action="/warmup">
-  <label>Sending from per mail box<input type="number" name="default_send_limit" value="{{ default_send_limit }}"></label>
-  <label>Follow up sending from per mail box (blank = no limit)
+  <label>Sending from per mail box per day<input type="number" name="default_send_limit" value="{{ default_send_limit }}"></label>
+  <label>Follow up sending from per mail box per day (blank = no limit)
     <input type="number" name="default_followup_limit" value="{{ default_followup_limit or '' }}"></label>
   <button>Save</button>
 </form>
@@ -42,7 +42,7 @@ no need to paste the same key into every inbox.</p>
 
 <table>
 <tr><th>Inbox</th><th>Name</th><th>Account</th><th>Today</th>
-    <th>Sending from per mail box / Follow up sending from per mail box</th><th>Enabled</th><th>Actions</th></tr>
+    <th>Sending from per mail box per day / Follow up sending from per mail box per day</th><th>Enabled</th><th>Actions</th></tr>
 {% for row in rows %}
 <tr>
   <td>{{ row.email }}</td>
