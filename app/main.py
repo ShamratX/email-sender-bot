@@ -581,6 +581,7 @@ async def campaign_create(
     windowed_countries: list[str] = Form([]),
     allowed_inboxes: list[str] = Form([]),
     account_id: str = Form(""),
+    footer_enabled: str = Form("1"),
 ):
     """Self-contained campaign creation, like Instantly/Lemlist: leads and
     every email step are entered right here, not picked from a separate
@@ -644,11 +645,12 @@ async def campaign_create(
     )
     campaign_id = int(cur.lastrowid)
 
+    footer_value = 1 if footer_enabled == "1" else 0
     for step, subject, body in steps:
         template_name = f"{name} :: step {step}"
         tcur = conn.execute(
-            "INSERT INTO templates (name, body, created_at) VALUES (?, ?, ?)",
-            (template_name, body, db.utcnow()),
+            "INSERT INTO templates (name, body, footer_enabled, created_at) VALUES (?, ?, ?, ?)",
+            (template_name, body, footer_value, db.utcnow()),
         )
         template_id = int(tcur.lastrowid)
         conn.execute(

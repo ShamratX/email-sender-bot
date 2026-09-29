@@ -81,6 +81,11 @@ in {{ '{{' }}city{{ '}}' }}. Worth a quick look?</pre>
     <option value="manual">manual &mdash; I click send</option>
     <option value="auto">auto</option></select></label>
   <label>Daily cap for this campaign (blank = none)<input type="text" name="daily_cap"></label>
+  <label style="font-weight:400">
+    <input type="hidden" name="footer_enabled" value="0">
+    <input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block" checked>
+    Add unsubscribe footer to every email in this campaign (initial and every follow-up)
+  </label>
   <button class="start">Create campaign</button>
 </form>
 </div>
