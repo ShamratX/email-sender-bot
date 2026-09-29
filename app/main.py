@@ -8,16 +8,36 @@ from fastapi import FastAPI, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from . import clock, config_file, db, engine, importer, templating, warmup, worker
+from . import auth, clock, config_file, db, engine, importer, templating, warmup, worker
 from .resend_client import build_client
 
 BASE = Path(__file__).resolve().parent
 UPLOADS = BASE.parent / "state" / "uploads"
 
+PUBLIC_PATHS = {"/login"}
+
 app = FastAPI(title="Email Sender Bot")
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
 pages = Jinja2Templates(directory=str(BASE / "templates"))
+
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    """Every request needs a valid session cookie except /login and static
+    files. No admin account yet -> every request bounces to /login, which
+    shows the one-time "set admin password" form instead of a login form."""
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        if path in PUBLIC_PATHS or path.startswith("/static/"):
+            return await call_next(request)
+        if not auth.verify_session_cookie(request.cookies.get(auth.COOKIE_NAME)):
+            return RedirectResponse("/login", status_code=303)
+        return await call_next(request)
+
+
+app.add_middleware(AuthMiddleware)
 
 
 @app.on_event("startup")
@@ -26,6 +46,49 @@ def startup() -> None:
     UPLOADS.mkdir(parents=True, exist_ok=True)
     config_file.sync_templates()
     worker.start()
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_form(request: Request, error: str = ""):
+    if auth.verify_session_cookie(request.cookies.get(auth.COOKIE_NAME)):
+        return back("/")
+    setup = not auth.admin_configured()
+    return pages.TemplateResponse(request, "login.html", {"setup": setup, "error": error})
+
+
+@app.post("/login")
+def login_submit(
+    mode: str = Form(...), username: str = Form(...), password: str = Form(...)
+):
+    if mode == "setup":
+        if auth.admin_configured():
+            return back("/login")  # already set up -- ignore a stale setup form
+        if len(password) < 8:
+            return RedirectResponse(
+                "/login?error=Password must be at least 8 characters.", status_code=303
+            )
+        auth.set_admin(username, password)
+        db.log_event("admin_account_created", None, {"username": username})
+    else:
+        if not auth.check_login(username, password):
+            return RedirectResponse("/login?error=Wrong username or password.", status_code=303)
+
+    response = RedirectResponse("/", status_code=303)
+    response.set_cookie(
+        auth.COOKIE_NAME,
+        auth.make_session_cookie(username.strip()),
+        max_age=auth.SESSION_SECONDS,
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
+@app.post("/logout")
+def logout():
+    response = RedirectResponse("/login", status_code=303)
+    response.delete_cookie(auth.COOKIE_NAME)
+    return response
 
 
 def page(request: Request, name: str, **context) -> HTMLResponse:

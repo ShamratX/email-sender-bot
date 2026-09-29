@@ -19,6 +19,7 @@
     <a href="/suppression" class="{{ 'active' if request.url.path == '/suppression' }}">Suppression</a>
     <a href="/settings" class="{{ 'active' if request.url.path == '/settings' }}">Settings</a>
   </nav>
+  <form method="post" action="/logout" class="inline"><button>Log out</button></form>
 </header>
 <main>
 {% block body %}{% endblock %}
