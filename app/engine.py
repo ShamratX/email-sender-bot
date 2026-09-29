@@ -231,6 +231,14 @@ def send_one(campaign, item: dict, client) -> dict:
     if db.is_suppressed(lead["email"]):
         return {"status": "skipped", "reason": "suppressed", "email": lead["email"]}
 
+    if item["step"] > 0:
+        cap = warmup.followup_daily_cap()
+        if cap is not None and warmup.followups_sent_today() >= cap:
+            # "skipped", not "blocked" -- a full follow-up cap must not halt
+            # the rest of this campaign's queue, since later items may well
+            # be step-0 (new) sends that have their own, separate budget.
+            return {"status": "skipped", "reason": "follow-up daily cap reached", "email": lead["email"]}
+
     if db.get_setting("verify_before_send") == "1":
         status = verifier.ensure_verified(lead["email"])
         if status in ("invalid_syntax", "no_mx"):

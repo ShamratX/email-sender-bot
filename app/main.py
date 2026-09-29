@@ -860,6 +860,8 @@ def inboxes(request: Request):
         schedule=json.loads(db.get_setting("warmup_schedule") or "{}"),
         start_date=db.get_setting("warmup_start_date"),
         cap=warmup.account_cap(),
+        followup_cap=warmup.followup_daily_cap(),
+        followup_used=warmup.followups_sent_today(),
     )
 
 
@@ -968,12 +970,14 @@ def warmup_save(
     week3: int = Form(20),
     week4: int = Form(35),
     account_cap: int = Form(100),
+    followup_daily_cap: str = Form(""),
 ):
     db.set_setting("warmup_start_date", start_date.strip())
     db.set_setting(
         "warmup_schedule", json.dumps({"1": week1, "2": week2, "3": week3, "4+": week4})
     )
     db.set_setting("account_daily_cap", account_cap)
+    db.set_setting("followup_daily_cap", followup_daily_cap.strip())
     return back("/inboxes")
 
 

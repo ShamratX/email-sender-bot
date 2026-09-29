@@ -103,8 +103,11 @@ no need to paste the same key into every inbox.</p>
   <label>Week 3<input type="number" name="week3" value="{{ schedule.get('3', 20) }}"></label>
   <label>Week 4 and later<input type="number" name="week4" value="{{ schedule.get('4+', 35) }}"></label>
   <label>Account cap per day (your Resend plan limit)<input type="number" name="account_cap" value="{{ cap }}"></label>
+  <label>Follow-up cap per day, separate from new sends (blank = no separate limit &mdash; follow-ups just
+    share the caps above with new sends)<input type="number" name="followup_daily_cap" value="{{ followup_cap or '' }}"></label>
   <button>Save</button>
 </form>
 <p class="note">Four inboxes at 35/day is 140 &mdash; more than a 100/day plan allows. The account cap is checked first.</p>
+<p class="muted">Follow-ups sent today: {{ followup_used }}{% if followup_cap %} / {{ followup_cap }}{% endif %}</p>
 </div>
 {% endblock %}

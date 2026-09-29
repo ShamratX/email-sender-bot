@@ -97,6 +97,23 @@ def sent_today(inbox_id: int | None = None, day: str | None = None) -> int:
     return int(row["n"])
 
 
+def followups_sent_today(day: str | None = None) -> int:
+    """Follow-ups (step > 0) sent today, across every campaign and account --
+    checked against its own separate cap, kept apart from the per-inbox/
+    per-account warm-up limits above so a backlog of due follow-ups can't
+    crowd out first-contact sends, and vice versa."""
+    day = day or clock.today()
+    row = db.connect().execute(
+        "SELECT COUNT(*) AS n FROM sends WHERE state='sent' AND sent_day=? AND step>0", (day,)
+    ).fetchone()
+    return int(row["n"])
+
+
+def followup_daily_cap() -> int | None:
+    raw = db.get_setting("followup_daily_cap")
+    return int(raw) if raw and raw.strip() else None
+
+
 def account_sent_today(account_id: int | None, day: str | None = None) -> int:
     """How much THIS account's inboxes (not the whole app) have sent today --
     what its own daily_cap is actually checked against."""
