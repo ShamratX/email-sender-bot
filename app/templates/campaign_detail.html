@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
 {% block body %}
 {% set active_countries = (c.windowed_countries or '').split(',') | select | list %}
 <h1>{{ c.name }} <span class="muted">({{ c.state }})</span></h1>
