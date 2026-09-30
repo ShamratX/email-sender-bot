@@ -1,12 +1,11 @@
 #!/bin/bash
 # Run on the VPS: ./update.sh
-# Pulls latest code, restarts the bot in the background, survives SSH disconnect.
+# Pulls latest code and restarts the systemd service. Survives SSH
+# disconnect AND server reboots (systemd starts it automatically on boot).
 set -e
 cd "$(dirname "$0")"
-pkill -f "run.py" 2>/dev/null || true
-sleep 1
 git pull
-nohup env SENDER_HOST=0.0.0.0 .venv/bin/python run.py > log.txt 2>&1 &
-disown
+.venv/bin/pip install -q -r requirements.txt
+sudo systemctl restart email-sender
 sleep 1
-echo "Updated and running. PID: $(pgrep -f run.py)"
+sudo systemctl status email-sender --no-pager -l | head -10

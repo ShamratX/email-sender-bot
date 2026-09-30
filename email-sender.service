@@ -1,0 +1,15 @@
+[Unit]
+Description=Email Sender Bot
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/email-sender-bot
+Environment=SENDER_HOST=0.0.0.0
+ExecStart=/home/ubuntu/email-sender-bot/.venv/bin/python /home/ubuntu/email-sender-bot/run.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
