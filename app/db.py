@@ -181,7 +181,7 @@ DEFAULT_SETTINGS = {
     "postal_address": "",
     "unsubscribe_email": "",
     "verify_before_send": "1",
-    "skip_weekends": "1",  # default on, per operator request
+    "send_days": json.dumps([0, 1, 2, 3, 4]),  # Mon-Fri by default (0=Monday .. 6=Sunday)
     # Times below are each country's OWN local business hours -- no manual
     # timezone conversion needed. country_timezones says which clock each
     # country's start/end is read in.

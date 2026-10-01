@@ -200,12 +200,13 @@ def blocked_reason(campaign, now: datetime | None = None) -> str | None:
         return "sending is stopped"
     if campaign["state"] != "running":
         return f"campaign is {campaign['state']}"
-    if db.get_setting("skip_weekends") == "1" and clock.now_local(now).weekday() >= 5:
-        # Monday=0 ... Saturday=5, Sunday=6. Checked in the operator's own
-        # timezone (Settings -> timezone), the same clock used everywhere
-        # else in the app -- applies to every campaign, including ones using
-        # per-country windows, since "no weekend sends" is a blanket rule.
-        return "weekend -- sending paused Saturday and Sunday"
+    send_days = json.loads(db.get_setting("send_days") or "[0,1,2,3,4]")
+    if clock.now_local(now).weekday() not in send_days:
+        # Monday=0 ... Sunday=6. Checked in the operator's own timezone
+        # (Settings -> timezone) -- applies to every campaign, including ones
+        # using per-country windows, since which days to send at all is a
+        # blanket rule, separate from each country's hour-of-day window.
+        return "today is not one of the allowed sending days"
     if not (campaign["windowed_countries"] or "").strip() and not clock.in_window(
         campaign["window_start"], campaign["window_end"], now
     ):

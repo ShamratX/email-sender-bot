@@ -1029,12 +1029,12 @@ def settings_page(request: Request):
         "postal_address",
         "unsubscribe_email",
         "verify_before_send",
-        "skip_weekends",
     ]
     return page(
         request,
         "settings.html",
         values={k: db.get_setting(k) for k in keys},
+        send_days=json.loads(db.get_setting("send_days") or "[0,1,2,3,4]"),
         has_key=bool(__import__("os").environ.get("RESEND_API_KEY")),
     )
 
@@ -1048,7 +1048,7 @@ def settings_save(
     postal_address: str = Form(""),
     unsubscribe_email: str = Form(""),
     verify_before_send: str = Form("0"),
-    skip_weekends: str = Form("0"),
+    send_days: list[str] = Form([]),
 ):
     for key, value in {
         "timezone": timezone,
@@ -1058,7 +1058,7 @@ def settings_save(
         "postal_address": postal_address,
         "unsubscribe_email": unsubscribe_email,
         "verify_before_send": "1" if verify_before_send == "1" else "0",
-        "skip_weekends": "1" if skip_weekends == "1" else "0",
+        "send_days": json.dumps(sorted(int(d) for d in send_days if d.strip())),
     }.items():
         db.set_setting(key, value)
     return back("/settings")
