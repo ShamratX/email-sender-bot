@@ -115,6 +115,7 @@ async def resend_webhook(request: Request):
 def page(request: Request, name: str, **context) -> HTMLResponse:
     context.setdefault("sending_enabled", db.get_setting("sending_enabled") == "1")
     context.setdefault("followups_due", len(engine.due_followups()))
+    context.setdefault("countries", db.COUNTRIES)
     return pages.TemplateResponse(request, name, context)
 
 
@@ -162,25 +163,19 @@ def country_windows_page(request: Request):
 
 
 @app.post("/country-windows")
-def country_windows_save(
-    au_start: str = Form("09:00"), au_end: str = Form("17:00"), au_tz: str = Form("Australia/Sydney"),
-    uk_start: str = Form("09:00"), uk_end: str = Form("17:00"), uk_tz: str = Form("Europe/London"),
-    ca_start: str = Form("09:00"), ca_end: str = Form("17:00"), ca_tz: str = Form("America/Toronto"),
-    us_start: str = Form("09:00"), us_end: str = Form("17:00"), us_tz: str = Form("America/New_York"),
-):
-    """One place to edit all four countries' send-time windows and their own
-    timezones. Any campaign with 'respect per-country windows' turned on reads
-    this at send time -- editing it here changes every such campaign at once,
-    no per-campaign edit. Each window is in that country's own local time --
-    no manual conversion to your own timezone needed."""
-    db.set_setting("country_windows", json.dumps({
-        "AU": [au_start, au_end], "UK": [uk_start, uk_end],
-        "CA": [ca_start, ca_end], "US": [us_start, us_end],
-    }))
-    db.set_setting("country_timezones", json.dumps({
-        "AU": au_tz.strip(), "UK": uk_tz.strip(),
-        "CA": ca_tz.strip(), "US": us_tz.strip(),
-    }))
+async def country_windows_save(request: Request):
+    """One place to edit every country's send-time window and its own
+    timezone. Any campaign with per-country windows turned on reads this at
+    send time -- editing it here changes every such campaign at once. Each
+    window is in that country's own local time."""
+    form = await request.form()
+    windows, timezones = {}, {}
+    for code in db.COUNTRIES:
+        key = code.lower()
+        windows[code] = [form.get(f"{key}_start", "09:00"), form.get(f"{key}_end", "17:00")]
+        timezones[code] = form.get(f"{key}_tz", db.COUNTRY_TIMEZONES[code]).strip()
+    db.set_setting("country_windows", json.dumps(windows))
+    db.set_setting("country_timezones", json.dumps(timezones))
     return back("/country-windows")
 
 

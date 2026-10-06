@@ -169,6 +169,22 @@ CREATE INDEX IF NOT EXISTS idx_sends_lookup ON sends (campaign_id, step, state);
 CREATE INDEX IF NOT EXISTS idx_sends_day    ON sends (sent_day, inbox_id);
 """
 
+COUNTRIES = ["US", "CA", "UK", "AU", "IE", "NL", "DK", "SE", "BE", "FI", "SG"]
+
+COUNTRY_TIMEZONES = {
+    "US": "America/New_York",
+    "CA": "America/Toronto",
+    "UK": "Europe/London",
+    "AU": "Australia/Sydney",
+    "IE": "Europe/Dublin",
+    "NL": "Europe/Amsterdam",
+    "DK": "Europe/Copenhagen",
+    "SE": "Europe/Stockholm",
+    "BE": "Europe/Brussels",
+    "FI": "Europe/Helsinki",
+    "SG": "Asia/Singapore",
+}
+
 DEFAULT_SETTINGS = {
     "timezone": "Asia/Dhaka",
     "sending_enabled": "0",
@@ -185,18 +201,8 @@ DEFAULT_SETTINGS = {
     # Times below are each country's OWN local business hours -- no manual
     # timezone conversion needed. country_timezones says which clock each
     # country's start/end is read in.
-    "country_windows": json.dumps({
-        "AU": ["09:00", "17:00"],
-        "UK": ["09:00", "17:00"],
-        "CA": ["09:00", "17:00"],
-        "US": ["09:00", "17:00"],
-    }),
-    "country_timezones": json.dumps({
-        "AU": "Australia/Sydney",
-        "UK": "Europe/London",
-        "CA": "America/Toronto",
-        "US": "America/New_York",
-    }),
+    "country_windows": json.dumps({code: ["09:00", "17:00"] for code in COUNTRIES}),
+    "country_timezones": json.dumps({code: COUNTRY_TIMEZONES[code] for code in COUNTRIES}),
 }
 
 

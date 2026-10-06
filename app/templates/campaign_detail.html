@@ -102,7 +102,7 @@
     <label>Use windowed send times for &mdash; a checked country only sends during its window
            (set on the Country windows page); unchecked sends anytime:</label>
     <label style="font-weight:400">
-      {% for code in ['AU', 'UK', 'CA', 'US'] %}
+      {% for code in countries %}
       <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
         <input type="checkbox" name="windowed_countries" value="{{ code }}" style="width:auto;display:inline-block"
                {{ 'checked' if code in active_countries }}> {{ code }}
