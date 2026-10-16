@@ -126,7 +126,12 @@ fieldset.group legend {
 }
 
 /* --- tables --- */
-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+/* overflow-x on the table element itself scrolls just the table when a
+   narrow viewport can't fit every column (e.g. the 8-column inbox table on
+   a tablet), instead of the whole page gaining horizontal scroll. The
+   table-layout algorithm (column alignment) is untouched -- no wrapper
+   div needed, display stays "table". */
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px; font-variant-numeric: tabular-nums; overflow-x: auto; }
 th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--fg-2); text-transform: uppercase; letter-spacing: .03em; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 tr:last-child td { border-bottom: 0; }
