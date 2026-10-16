@@ -181,8 +181,11 @@ async def country_windows_save(request: Request):
 
 # --- leads and import -----------------------------------------------------
 
+PAGE_SIZE = 50
+
+
 @app.get("/leads", response_class=HTMLResponse)
-def leads(request: Request, q: str = "", status: str = ""):
+def leads(request: Request, q: str = "", status: str = "", page_num: int = 1):
     conn = db.connect()
     where = "WHERE 1=1"
     params: list = []
@@ -199,15 +202,19 @@ def leads(request: Request, q: str = "", status: str = ""):
             " AND l.email NOT IN (SELECT email FROM suppression)"
         )
 
+    page_num = max(1, page_num)
+    shown = conn.execute(f"SELECT COUNT(*) AS n FROM leads l {where}", params).fetchone()["n"]
     rows = conn.execute(
         "SELECT l.*, (SELECT reason FROM suppression s WHERE s.email = l.email) AS suppressed, "
         "(SELECT COUNT(*) FROM sends x WHERE x.lead_id = l.id AND x.state='sent') AS sent_count "
-        f"FROM leads l {where} ORDER BY l.id DESC LIMIT 300",
-        params,
+        f"FROM leads l {where} ORDER BY l.id DESC LIMIT ? OFFSET ?",
+        params + [PAGE_SIZE, (page_num - 1) * PAGE_SIZE],
     ).fetchall()
-    shown = conn.execute(f"SELECT COUNT(*) AS n FROM leads l {where}", params).fetchone()["n"]
     total = conn.execute("SELECT COUNT(*) AS n FROM leads").fetchone()["n"]
-    return page(request, "leads.html", rows=rows, q=q, status=status, total=total, shown=shown)
+    return page(
+        request, "leads.html", rows=rows, q=q, status=status, total=total, shown=shown,
+        page_num=page_num, has_next=page_num * PAGE_SIZE < shown, page_size=PAGE_SIZE,
+    )
 
 
 @app.get("/leads/{lead_id}", response_class=HTMLResponse)
@@ -485,11 +492,14 @@ def campaign_list(request: Request, msg: str = "", error: str = ""):
         for row in rows
     }
 
+    progress = {row["id"]: engine.campaign_progress(row["id"]) for row in rows}
+
     return page(
         request,
         "campaigns.html",
         rows=rows,
         steps=steps,
+        progress=progress,
         msg=msg,
         error=error,
         inboxes=conn.execute("SELECT * FROM inboxes ORDER BY id").fetchall(),
@@ -988,19 +998,24 @@ def warmup_save(
 
 
 @app.get("/suppression", response_class=HTMLResponse)
-def suppression(request: Request, q: str = ""):
-    sql = "SELECT * FROM suppression"
-    params: list = []
-    if q:
-        sql += " WHERE email LIKE ?"
-        params.append(f"%{q}%")
-    sql += " ORDER BY created_at DESC LIMIT 500"
+def suppression(request: Request, q: str = "", page_num: int = 1):
+    page_num = max(1, page_num)
+    conn = db.connect()
+    where = " WHERE email LIKE ?" if q else ""
+    params: list = [f"%{q}%"] if q else []
+    shown = conn.execute(f"SELECT COUNT(*) AS n FROM suppression{where}", params).fetchone()["n"]
+    rows = conn.execute(
+        f"SELECT * FROM suppression{where} ORDER BY created_at DESC LIMIT ? OFFSET ?",
+        params + [PAGE_SIZE, (page_num - 1) * PAGE_SIZE],
+    ).fetchall()
     return page(
         request,
         "suppression.html",
-        rows=db.connect().execute(sql, params).fetchall(),
+        rows=rows,
         q=q,
-        total=db.connect().execute("SELECT COUNT(*) AS n FROM suppression").fetchone()["n"],
+        total=conn.execute("SELECT COUNT(*) AS n FROM suppression").fetchone()["n"],
+        shown=shown,
+        page_num=page_num, has_next=page_num * PAGE_SIZE < shown, page_size=PAGE_SIZE,
     )
 
 

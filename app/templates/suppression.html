@@ -25,4 +25,13 @@
 {% endfor %}
 </table>
 </div>
+{% if shown > page_size %}
+<div class="pagination">
+  <span class="muted">{{ ((page_num-1)*page_size)+1 }}&ndash;{{ [page_num*page_size, shown]|min }} of {{ shown }}</span>
+  <span class="pagination-links">
+    {% if page_num > 1 %}<a href="?q={{ q }}&page_num={{ page_num-1 }}">&larr; Previous</a>{% endif %}
+    {% if has_next %}<a href="?q={{ q }}&page_num={{ page_num+1 }}">Next &rarr;</a>{% endif %}
+  </span>
+</div>
+{% endif %}
 {% endblock %}

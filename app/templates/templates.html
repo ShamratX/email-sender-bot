@@ -2,31 +2,35 @@
 {% block body %}
 <div class="page-head"><h1>Templates</h1></div>
 {% for row in rows %}
-<div class="card">
-  <h2>{{ row.name }}</h2>
-  <form method="post" action="/templates">
-    <input type="hidden" name="template_id" value="{{ row.id }}">
-    <label>Name<input type="text" name="name" value="{{ row.name }}"></label>
-    <label>Subject lines (one per line, rotated per lead)
-      <textarea name="subjects" rows="3">{{ subjects[row.id] | join('\n') }}</textarea></label>
-    <label>Body<textarea name="body" rows="10">{{ row.body }}</textarea></label>
-    <label><input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block"
-           {{ 'checked' if row.footer_enabled }}>
-           Include unsubscribe footer</label>
-    <p class="note">Off = no unsubscribe line at all. Most anti-spam laws require one &mdash; only disable for replies to someone who already contacted you.</p>
-    <label>Footer text (leave blank to use the default from Settings)
-      <textarea name="footer_text" rows="3" placeholder="Unsubscribe: reply UNSUBSCRIBE.">{{ row.footer_text or '' }}</textarea></label>
-    <div class="actions">
-      <button>Save</button>
-      <a href="/templates/{{ row.id }}/preview">Preview against a real lead</a>
+<div class="card template-card">
+  <div class="template-head">
+    <div class="grow">
+      <div class="inbox-name">{{ row.name }}</div>
+      <p class="muted" style="margin:0">{{ subjects[row.id][0] if subjects[row.id] else 'No subject set' }}</p>
     </div>
-  </form>
-  <div class="actions">
-    <form method="post" action="/templates/{{ row.id }}/delete"
+    <a href="/templates/{{ row.id }}/preview">Preview</a>
+    <form method="post" action="/templates/{{ row.id }}/delete" class="inline"
           onsubmit="return confirm('Delete template {{ row.name }}? Campaigns using it keep their history but can no longer use it for new sends.');">
-      <button class="danger">Delete template</button>
+      <button class="danger">Delete</button>
     </form>
   </div>
+  <details>
+    <summary>Edit</summary>
+    <form method="post" action="/templates">
+      <input type="hidden" name="template_id" value="{{ row.id }}">
+      <label>Name<input type="text" name="name" value="{{ row.name }}"></label>
+      <label>Subject lines (one per line, rotated per lead)
+        <textarea name="subjects" rows="3">{{ subjects[row.id] | join('\n') }}</textarea></label>
+      <label>Body<textarea name="body" rows="10">{{ row.body }}</textarea></label>
+      <label><input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block"
+             {{ 'checked' if row.footer_enabled }}>
+             Include unsubscribe footer</label>
+      <p class="note">Off = no unsubscribe line at all. Most anti-spam laws require one &mdash; only disable for replies to someone who already contacted you.</p>
+      <label>Footer text (leave blank to use the default from Settings)
+        <textarea name="footer_text" rows="3" placeholder="Unsubscribe: reply UNSUBSCRIBE.">{{ row.footer_text or '' }}</textarea></label>
+      <button class="start">Save</button>
+    </form>
+  </details>
 </div>
 {% endfor %}
 <div class="card">

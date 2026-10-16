@@ -43,36 +43,35 @@
 </div>
 </div>
 
-<div class="card">
 <h2>Inboxes</h2>
-<table>
-<tr><th>Inbox</th><th>Name</th><th>Account</th><th>Today</th>
-    <th>Send limit</th><th>Follow-up limit</th><th></th><th>Enabled</th><th>Actions</th></tr>
+<div class="grid g2">
 {% for row in rows %}
-<tr>
-  <td>{{ row.email }}</td>
-  <td>{{ row.name }}</td>
-  <td>{{ row.account_name or 'default (.env)' }}</td>
-  <td class="muted">
+<div class="card inbox-card">
+  <div class="inbox-head">
+    <div class="inbox-avatar">{{ row.email[0]|upper }}</div>
+    <div class="grow">
+      <div class="inbox-name">{{ row.email }}</div>
+      <p class="muted" style="margin:0">{{ row.name }}</p>
+    </div>
+    <span class="pill {{ 'ok' if row.enabled else '' }}">{{ 'enabled' if row.enabled else 'disabled' }}</span>
+  </div>
+  <div class="chips">
+    <span class="chip">{{ row.account_name or 'default (.env)' }}</span>
     {% for q in quota.inboxes %}{% if q.id == row.id %}
-      {{ q.send_used }}/{{ q.send_limit }} new &middot;
-      {{ q.followup_used }}/{{ q.followup_limit if q.followup_limit is not none else 'no limit' }} follow-up
+    <span class="chip">{{ q.send_used }}/{{ q.send_limit }} sent today</span>
+    <span class="chip">{{ q.followup_used }}/{{ q.followup_limit if q.followup_limit is not none else 'no limit' }} follow-up</span>
     {% endif %}{% endfor %}
-  </td>
-  <td>
-    <form id="limit-{{ row.id }}" method="post" action="/inboxes/{{ row.id }}/limit" style="display:none"></form>
-    <input type="number" name="daily_limit" form="limit-{{ row.id }}"
+  </div>
+  <form method="post" action="/inboxes/{{ row.id }}/limit" class="inbox-limits">
+    <label>Send/day<input type="number" name="daily_limit"
            value="{{ row.daily_limit if row.daily_limit is not none else '' }}"
-           placeholder="{{ default_send_limit }}" style="width:64px">
-  </td>
-  <td>
-    <input type="number" name="daily_followup_limit" form="limit-{{ row.id }}"
+           placeholder="{{ default_send_limit }}"></label>
+    <label>Follow-up/day<input type="number" name="daily_followup_limit"
            value="{{ row.daily_followup_limit if row.daily_followup_limit is not none else '' }}"
-           placeholder="{{ default_followup_limit or 'none' }}" style="width:64px">
-  </td>
-  <td><button form="limit-{{ row.id }}">Save</button></td>
-  <td>{{ 'yes' if row.enabled else 'no' }}</td>
-  <td>
+           placeholder="{{ default_followup_limit or 'none' }}"></label>
+    <button>Save</button>
+  </form>
+  <div class="actions">
     <details>
       <summary>Edit</summary>
       <form method="post" action="/inboxes/{{ row.id }}/edit">
@@ -90,12 +89,11 @@
     <form method="post" action="/inboxes/{{ row.id }}/delete" class="inline"
           onsubmit="return confirm('Delete inbox {{ row.email }}? Past sends from it keep their record.');">
       <button class="danger">Delete</button></form>
-  </td>
-</tr>
+  </div>
+</div>
 {% else %}
-<tr><td colspan="9" class="muted">None yet.</td></tr>
+<p class="muted">No inboxes yet &mdash; add one below.</p>
 {% endfor %}
-</table>
 </div>
 
 <div class="card">

@@ -5,17 +5,25 @@
   <h1>Dashboard</h1>
   <p class="muted">
   <span class="pill {{ 'bad' if sending_enabled else '' }}">Sending {{ 'RUNNING' if sending_enabled else 'STOPPED' }}</span>
-  &mdash; controlled from each campaign's own Run/Pause button, not here.
-  Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
-  Worker: {{ worker_status.last_result }}</p>
+  <span class="pill {{ 'ok' if mode == 'live' else 'warn' }}">{{ mode }}{% if mode != 'live' %} &mdash; nothing sent{% endif %}</span>
+  </p>
 </div>
 
 {% set ns = namespace(pending=0, sent=0, failed=0) %}
 {% for c in campaigns %}{% set ns.pending = ns.pending + progress[c.id].pending %}{% set ns.sent = ns.sent + progress[c.id].sent %}{% set ns.failed = ns.failed + progress[c.id].failed %}{% endfor %}
-<div class="stats">
-  <div class="stat"><b>{{ ns.pending }}</b><span>Pending (all campaigns)</span></div>
-  <div class="stat"><b>{{ ns.sent }}</b><span>Sent</span></div>
-  <div class="stat {{ 'bad' if ns.failed }}"><b>{{ ns.failed }}</b><span>Failed</span></div>
+<div class="kpis">
+  <div class="kpi">
+    <div class="kpi-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 3.2"/></svg></div>
+    <div><b>{{ ns.pending }}</b><span>Pending</span></div>
+  </div>
+  <div class="kpi kpi-ok">
+    <div class="kpi-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-8-8 18-2.2-7.8L3 11z"/></svg></div>
+    <div><b>{{ ns.sent }}</b><span>Sent</span></div>
+  </div>
+  <div class="kpi {{ 'kpi-bad' if ns.failed }}">
+    <div class="kpi-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
+    <div><b>{{ ns.failed }}</b><span>Failed</span></div>
+  </div>
 </div>
 
 <div class="card">
