@@ -2,8 +2,7 @@
 {% block body %}
 <div class="page-head">
   <h1>Follow-ups due ({{ rows | length }})</h1>
-  <p class="muted">A follow-up becomes due when the previous email was actually sent, the gap has passed,
-  and the lead has not replied, bounced, complained or unsubscribed.</p>
+  <p class="muted">Due when the gap has passed since the previous send, if not replied, bounced, or unsubscribed.</p>
 </div>
 <form method="post" action="/followups/send-now"><button class="start">Send all due follow-ups now</button></form>
 <div class="card">

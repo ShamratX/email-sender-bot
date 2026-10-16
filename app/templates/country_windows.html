@@ -2,11 +2,8 @@
 {% block body %}
 <div class="page-head">
   <h1>Country send windows</h1>
-  <p class="muted">One shared campaign can send to every country at once &mdash; each lead is only sent to
-  during its own country's window below, read from the <code>country</code> column in your sheet automatically.
-  Each window is set in that country's own local time zone &mdash; no manual conversion needed. Turn this on
-  per campaign with the "Respect per-country send windows" checkbox when creating or editing a campaign on the
-  <a href="/campaigns">Campaigns page</a>.</p>
+  <p class="muted">Each lead sends only during its own country's window, in that country's local time &mdash;
+  read from the <code>country</code> column in your sheet. Enable per campaign on the <a href="/campaigns">Campaigns page</a>.</p>
 </div>
 
 <form method="post" action="/country-windows">
@@ -24,6 +21,5 @@
   <button class="start">Save all</button>
 </form>
 
-<p class="muted">Your own timezone (used for testing, warm-up daily limits, and any campaign not using
-country windows) is set on the <a href="/settings">Settings page</a>.</p>
+<p class="muted">Your own timezone is set on the <a href="/settings">Settings page</a>.</p>
 {% endblock %}

@@ -13,9 +13,7 @@
     <label><input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block"
            {{ 'checked' if row.footer_enabled }}>
            Include unsubscribe footer</label>
-    <p class="note">Turning this off sends the email with no unsubscribe line or address at all.
-    Most countries' anti-spam laws (CAN-SPAM, CASL, etc) require some way to opt out of commercial email &mdash;
-    only disable this if you're sure this template doesn't need it (e.g. a reply to someone who already contacted you).</p>
+    <p class="note">Off = no unsubscribe line at all. Most anti-spam laws require one &mdash; only disable for replies to someone who already contacted you.</p>
     <label>Footer text (leave blank to use the default from Settings)
       <textarea name="footer_text" rows="3" placeholder="Unsubscribe: reply UNSUBSCRIBE.">{{ row.footer_text or '' }}</textarea></label>
     <div class="actions">

@@ -65,6 +65,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
+/* Long unbroken strings (emails, API keys, URLs) wrap instead of forcing
+   the page wider than the viewport -- the actual cause of text looking
+   "not responsive" on narrow screens. */
+p, td, .muted, .note, h1, h2 { overflow-wrap: anywhere; }
 h1 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 4px; line-height: 1.25; }
 h2 { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-2); margin: 30px 0 12px; }
 h2:first-of-type { margin-top: 0; }
