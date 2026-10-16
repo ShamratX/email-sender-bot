@@ -6,6 +6,7 @@
   and the lead has not replied, bounced, complained or unsubscribed.</p>
 </div>
 <form method="post" action="/followups/send-now"><button class="start">Send all due follow-ups now</button></form>
+<div class="card">
 <table>
 <tr><th>Email</th><th>Campaign</th><th>Step</th><th>Previous sent</th><th>Days since</th></tr>
 {% for row in rows %}
@@ -15,4 +16,5 @@
 <tr><td colspan="5" class="muted">Nothing due.</td></tr>
 {% endfor %}
 </table>
+</div>
 {% endblock %}

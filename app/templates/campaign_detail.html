@@ -32,6 +32,7 @@
   <div class="stat {{ 'bad' if progress.failed }}"><b>{{ progress.failed }}</b><span>Failed</span></div>
 </div>
 
+<div class="card">
 <h2>Inbox usage today</h2>
 <table>
 <tr><th>Inbox</th><th>Sent</th><th>Send limit</th><th>Follow-ups</th><th>Follow-up limit</th></tr>
@@ -45,7 +46,9 @@
 <tr><td colspan="5" class="muted">No inboxes assigned &mdash; uses any enabled inbox.</td></tr>
 {% endfor %}
 </table>
+</div>
 
+<div class="card">
 <h2>Needs attention</h2>
 <table>
 <tr><th>Email</th><th>Step</th><th>State</th><th>Detail</th><th>Resolve</th></tr>
@@ -65,7 +68,9 @@
 <tr><td colspan="5" class="muted">Nothing. Good.</td></tr>
 {% endfor %}
 </table>
+</div>
 
+<div class="card">
 <h2>Recent sends</h2>
 <table>
 <tr><th>Email</th><th>Step</th><th>State</th><th>When</th></tr>
@@ -77,7 +82,9 @@
 <tr><td colspan="4" class="muted">Nothing sent yet.</td></tr>
 {% endfor %}
 </table>
+</div>
 
+<div class="card">
 <details>
   <summary>Add more leads to this campaign</summary>
   <form method="post" action="/campaigns/{{ c.id }}/add-leads" enctype="multipart/form-data">
@@ -85,9 +92,11 @@
     <button>Upload and add</button>
   </form>
 </details>
+</div>
 
 {% set current = {} %}
 {% for s in steps %}{% set _ = current.update({s.step: s}) %}{% endfor %}
+<div class="card">
 <details>
   <summary>Edit this campaign's emails</summary>
   <form method="post" action="/campaigns/{{ c.id }}/steps">
@@ -149,4 +158,5 @@
     <button class="start">Save</button>
   </form>
 </details>
+</div>
 {% endblock %}

@@ -11,6 +11,7 @@
   </select>
   <button>Search</button>
 </form>
+<div class="card">
 <table>
 <tr><th>Email</th><th>Sent</th><th>Suppressed</th><th>Source file</th></tr>
 {% for row in rows %}
@@ -21,4 +22,5 @@
 <tr><td colspan="4" class="muted">Nothing here. Leads get added when you create or edit a campaign &mdash; see <a href="/campaigns">Campaigns</a>.</td></tr>
 {% endfor %}
 </table>
+</div>
 {% endblock %}

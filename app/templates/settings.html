@@ -2,6 +2,7 @@
 {% block body %}
 <div class="page-head"><h1>Settings</h1></div>
 <p class="{{ 'note ok' if has_key else 'note' }}">RESEND_API_KEY is {{ 'set' if has_key else 'NOT set' }} in .env. Live mode needs it.</p>
+<div class="card">
 <form method="post" action="/settings">
   <fieldset class="group">
     <legend>Sending behavior</legend>
@@ -41,4 +42,5 @@
 
   <button class="start">Save</button>
 </form>
+</div>
 {% endblock %}

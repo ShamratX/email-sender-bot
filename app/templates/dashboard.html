@@ -18,6 +18,7 @@
   <div class="stat {{ 'bad' if ns.failed }}"><b>{{ ns.failed }}</b><span>Failed</span></div>
 </div>
 
+<div class="card">
 <h2>Today &mdash; {{ quota.day }}</h2>
 <table>
 <tr><th>Inbox</th><th>Sent</th><th>Send limit</th><th>Follow-ups</th><th>Follow-up limit</th></tr>
@@ -31,7 +32,9 @@
 <tr><td colspan="5">No inboxes yet. <a href="/inboxes">Add one.</a></td></tr>
 {% endfor %}
 </table>
+</div>
 
+<div class="card">
 <h2>Campaigns</h2>
 <table>
 <tr><th>Name</th><th>State</th><th>Window</th><th>Follow-ups</th><th>Pending</th><th>Sent</th><th>Failed</th></tr>
@@ -45,7 +48,9 @@
 <tr><td colspan="7">None yet. <a href="/campaigns">Create one.</a></td></tr>
 {% endfor %}
 </table>
+</div>
 
+<div class="card">
 <h2>Needs attention</h2>
 <table>
 <tr><th>Email</th><th>Step</th><th>State</th><th>Detail</th><th>Resolve</th></tr>
@@ -62,4 +67,5 @@
 <tr><td colspan="5" class="muted">Nothing. Good.</td></tr>
 {% endfor %}
 </table>
+</div>
 {% endblock %}

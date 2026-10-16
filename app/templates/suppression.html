@@ -16,6 +16,7 @@ with a SQLite tool, not through the UI.</p>
   <button>Add</button>
 </form>
 </div>
+<div class="card">
 <table>
 <tr><th>Email</th><th>Reason</th><th>When</th></tr>
 {% for row in rows %}
@@ -26,4 +27,5 @@ with a SQLite tool, not through the UI.</p>
 <tr><td colspan="3" class="muted">Empty.</td></tr>
 {% endfor %}
 </table>
+</div>
 {% endblock %}
