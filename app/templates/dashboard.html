@@ -1,10 +1,19 @@
 {% extends "base.html" %}
 {% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
 {% block body %}
-<p class="muted">Sending is <strong>{{ 'RUNNING' if sending_enabled else 'STOPPED' }}</strong> &mdash;
-controlled from each campaign's own Run/Pause button, not here.
+<p class="muted">
+<span class="pill {{ 'bad' if sending_enabled else '' }}">Sending {{ 'RUNNING' if sending_enabled else 'STOPPED' }}</span>
+&mdash; controlled from each campaign's own Run/Pause button, not here.
 Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
 Worker: {{ worker_status.last_result }}</p>
+
+{% set ns = namespace(pending=0, sent=0, failed=0) %}
+{% for c in campaigns %}{% set ns.pending = ns.pending + progress[c.id].pending %}{% set ns.sent = ns.sent + progress[c.id].sent %}{% set ns.failed = ns.failed + progress[c.id].failed %}{% endfor %}
+<div class="stats">
+  <div class="stat"><b>{{ ns.pending }}</b><span>Pending (all campaigns)</span></div>
+  <div class="stat"><b>{{ ns.sent }}</b><span>Sent</span></div>
+  <div class="stat {{ 'bad' if ns.failed }}"><b>{{ ns.failed }}</b><span>Failed</span></div>
+</div>
 
 <h2>Today &mdash; {{ quota.day }}</h2>
 <table>
@@ -24,7 +33,8 @@ Worker: {{ worker_status.last_result }}</p>
 <table>
 <tr><th>Name</th><th>State</th><th>Window</th><th>Follow-ups</th><th>Pending</th><th>Sent</th><th>Failed</th></tr>
 {% for c in campaigns %}
-<tr><td><a href="/campaigns">{{ c.name }}</a></td><td>{{ c.state }}</td>
+<tr><td><a href="/campaigns">{{ c.name }}</a></td>
+    <td><span class="pill {{ 'ok' if c.state == 'running' else ('warn' if c.state == 'paused' else '') }}">{{ c.state }}</span></td>
     <td>{{ c.window_start }}&ndash;{{ c.window_end }}</td><td>{{ c.followup_mode }}</td>
     <td>{{ progress[c.id].pending }}</td><td>{{ progress[c.id].sent }}</td>
     <td class="{{ 'error' if progress[c.id].failed }}">{{ progress[c.id].failed }}</td></tr>
@@ -37,7 +47,9 @@ Worker: {{ worker_status.last_result }}</p>
 <table>
 <tr><th>Email</th><th>Step</th><th>State</th><th>Detail</th><th>Resolve</th></tr>
 {% for row in attention %}
-<tr><td>{{ row.email }}</td><td>{{ row.step }}</td><td>{{ row.state }}</td><td class="muted">{{ row.error }}</td>
+<tr><td>{{ row.email }}</td><td>{{ row.step }}</td>
+<td><span class="pill {{ 'bad' if row.state == 'failed' else 'warn' }}">{{ row.state }}</span></td>
+<td class="muted">{{ row.error }}</td>
 <td>{% if row.state == 'unknown' %}
 <form method="post" action="/sends/{{ row.id }}/resolve">
   <select name="outcome"><option value="sent">it was sent</option><option value="failed">it was not sent</option></select>

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block body %}
 {% set active_countries = (c.windowed_countries or '').split(',') | select | list %}
-<h1>{{ c.name }} <span class="muted">({{ c.state }})</span></h1>
+<h1>{{ c.name }} <span class="pill {{ 'ok' if c.state == 'running' else ('warn' if c.state == 'paused' else '') }}">{{ c.state }}</span></h1>
 {% if msg %}<p class="note">{{ msg }}</p>{% endif %}
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 {% set active_inbox_names = inboxes | selectattr('id', 'in', active_inbox_ids) | map(attribute='email') | list %}
@@ -24,11 +24,11 @@
 </div>
 
 <h2>Progress</h2>
-<table>
-<tr><th>Pending</th><th>Sent</th><th>Failed</th></tr>
-<tr><td>{{ progress.pending }}</td><td>{{ progress.sent }}</td>
-    <td class="{{ 'error' if progress.failed }}">{{ progress.failed }}</td></tr>
-</table>
+<div class="stats">
+  <div class="stat"><b>{{ progress.pending }}</b><span>Pending</span></div>
+  <div class="stat"><b>{{ progress.sent }}</b><span>Sent</span></div>
+  <div class="stat {{ 'bad' if progress.failed }}"><b>{{ progress.failed }}</b><span>Failed</span></div>
+</div>
 
 <h2>Inbox usage today</h2>
 <table>
@@ -48,7 +48,9 @@
 <table>
 <tr><th>Email</th><th>Step</th><th>State</th><th>Detail</th><th>Resolve</th></tr>
 {% for row in attention %}
-<tr><td>{{ row.email }}</td><td>{{ row.step }}</td><td>{{ row.state }}</td><td class="muted">{{ row.error }}</td>
+<tr><td>{{ row.email }}</td><td>{{ row.step }}</td>
+<td><span class="pill {{ 'bad' if row.state == 'failed' else 'warn' }}">{{ row.state }}</span></td>
+<td class="muted">{{ row.error }}</td>
 <td>{% if row.state == 'unknown' %}
 <form method="post" action="/sends/{{ row.id }}/resolve">
   <select name="outcome"><option value="sent">it was sent</option><option value="failed">it was not sent</option></select>
@@ -66,7 +68,8 @@
 <table>
 <tr><th>Email</th><th>Step</th><th>State</th><th>When</th></tr>
 {% for s in recent_sends %}
-<tr><td>{{ s.email }}</td><td>{{ s.step }}</td><td>{{ s.state }}</td>
+<tr><td>{{ s.email }}</td><td>{{ s.step }}</td>
+    <td><span class="pill {{ 'ok' if s.state == 'sent' else ('bad' if s.state == 'failed' else 'warn') }}">{{ s.state }}</span></td>
     <td class="muted">{{ s.sent_at or s.reserved_at }}</td></tr>
 {% else %}
 <tr><td colspan="4" class="muted">Nothing sent yet.</td></tr>

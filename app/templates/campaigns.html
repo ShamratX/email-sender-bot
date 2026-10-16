@@ -7,7 +7,7 @@
 
 {% for c in rows %}
 <div class="card">
-  <h2><a href="/campaigns/{{ c.id }}">{{ c.name }}</a> <span class="muted">({{ c.state }})</span></h2>
+  <h2><a href="/campaigns/{{ c.id }}">{{ c.name }}</a> <span class="pill {{ 'ok' if c.state == 'running' else ('warn' if c.state == 'paused' else '') }}">{{ c.state }}</span></h2>
   {% set active_countries = (c.windowed_countries or '').split(',') | select | list %}
   {% set active_inbox_ids = (c.allowed_inboxes or '').split(',') | select | map('int') | list %}
   {% set active_inbox_names = inboxes | selectattr('id', 'in', active_inbox_ids) | map(attribute='email') | list %}
