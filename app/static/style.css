@@ -96,7 +96,7 @@ nav a:hover { background: var(--side-hover); color: var(--side-hi); }
 nav a.active { background: var(--side-on); color: var(--side-hi); box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
 nav a .count { margin-left: auto; background: var(--accent); color: var(--accent-ink); border-radius: 999px; font-size: 11px; padding: 0 7px; font-weight: 700; line-height: 18px; }
 
-body:has(> header) > main { flex: 1; min-width: 0; padding: 28px 32px 60px; max-width: 1240px; }
+body:has(> header) > main { flex: 1; min-width: 0; padding: 28px 32px 60px; max-width: 1600px; margin: 0 auto; }
 
 /* --- grid helpers: used to stop long runs of near-identical cards (e.g.
    11 country cards) from reading as one endless vertical list --- */
