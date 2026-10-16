@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
 {% block body %}
-<p class="muted">
-<span class="pill {{ 'bad' if sending_enabled else '' }}">Sending {{ 'RUNNING' if sending_enabled else 'STOPPED' }}</span>
-&mdash; controlled from each campaign's own Run/Pause button, not here.
-Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
-Worker: {{ worker_status.last_result }}</p>
+<div class="page-head">
+  <h1>Dashboard</h1>
+  <p class="muted">
+  <span class="pill {{ 'bad' if sending_enabled else '' }}">Sending {{ 'RUNNING' if sending_enabled else 'STOPPED' }}</span>
+  &mdash; controlled from each campaign's own Run/Pause button, not here.
+  Mode: <strong>{{ mode }}</strong>{% if mode != 'live' %} &mdash; nothing is actually sent{% endif %}.
+  Worker: {{ worker_status.last_result }}</p>
+</div>
 
 {% set ns = namespace(pending=0, sent=0, failed=0) %}
 {% for c in campaigns %}{% set ns.pending = ns.pending + progress[c.id].pending %}{% set ns.sent = ns.sent + progress[c.id].sent %}{% set ns.failed = ns.failed + progress[c.id].failed %}{% endfor %}

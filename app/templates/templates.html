@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Templates</h1>
+<div class="page-head"><h1>Templates</h1></div>
 {% for row in rows %}
 <div class="card">
+  <h2>{{ row.name }}</h2>
   <form method="post" action="/templates">
     <input type="hidden" name="template_id" value="{{ row.id }}">
     <label>Name<input type="text" name="name" value="{{ row.name }}"></label>

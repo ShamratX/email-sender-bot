@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Inboxes and sending limits</h1>
+<div class="page-head">
+  <h1>Inboxes and sending limits</h1>
+</div>
 
+<div class="grid g2">
 <div class="card">
 <h2>Accounts (Resend API keys)</h2>
 <p class="muted">Set a key once per domain/Resend account here. Assign inboxes to an account below &mdash;
@@ -39,10 +42,11 @@ no need to paste the same key into every inbox.</p>
   <button>Save</button>
 </form>
 </div>
+</div>
 
 <table>
 <tr><th>Inbox</th><th>Name</th><th>Account</th><th>Today</th>
-    <th>Sending from per mail box per day / Follow up sending from per mail box per day</th><th>Enabled</th><th>Actions</th></tr>
+    <th>Send limit</th><th>Follow-up limit</th><th>Enabled</th><th>Actions</th></tr>
 {% for row in rows %}
 <tr>
   <td>{{ row.email }}</td>
@@ -55,14 +59,20 @@ no need to paste the same key into every inbox.</p>
     {% endif %}{% endfor %}
   </td>
   <td>
-    <form method="post" action="/inboxes/{{ row.id }}/limit" class="inline">
-      <input type="number" name="daily_limit" value="{{ row.daily_limit if row.daily_limit is not none else '' }}"
-             placeholder="{{ default_send_limit }}" style="width:70px">
-      <input type="number" name="daily_followup_limit"
+    <form id="limit-{{ row.id }}" method="post" action="/inboxes/{{ row.id }}/limit" style="display:none"></form>
+    <label class="muted" style="margin:0;font-weight:400">
+      <input type="number" name="daily_limit" form="limit-{{ row.id }}"
+             value="{{ row.daily_limit if row.daily_limit is not none else '' }}"
+             placeholder="{{ default_send_limit }}" style="width:70px;display:inline-block;margin-top:2px">
+    </label>
+  </td>
+  <td>
+    <label class="muted" style="margin:0;font-weight:400">
+      <input type="number" name="daily_followup_limit" form="limit-{{ row.id }}"
              value="{{ row.daily_followup_limit if row.daily_followup_limit is not none else '' }}"
-             placeholder="{{ default_followup_limit or 'none' }}" style="width:70px">
-      <button>Save</button>
-    </form>
+             placeholder="{{ default_followup_limit or 'none' }}" style="width:70px;display:inline-block;margin-top:2px">
+    </label>
+    <button form="limit-{{ row.id }}">Save</button>
   </td>
   <td>{{ 'yes' if row.enabled else 'no' }}</td>
   <td>
@@ -86,7 +96,7 @@ no need to paste the same key into every inbox.</p>
   </td>
 </tr>
 {% else %}
-<tr><td colspan="7" class="muted">None yet.</td></tr>
+<tr><td colspan="8" class="muted">None yet.</td></tr>
 {% endfor %}
 </table>
 

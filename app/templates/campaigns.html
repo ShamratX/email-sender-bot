@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Campaigns</h1>
-<p class="muted">Each campaign is self-contained &mdash; its own leads, its own emails, its own dashboard. Nothing to match up across pages.</p>
-{% if msg %}<p class="note">{{ msg }}</p>{% endif %}
+<div class="page-head">
+  <h1>Campaigns</h1>
+  <p class="muted">Each campaign is self-contained &mdash; its own leads, its own emails, its own dashboard. Nothing to match up across pages.</p>
+</div>
+{% if msg %}<p class="note ok">{{ msg }}</p>{% endif %}
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
 {% for c in rows %}

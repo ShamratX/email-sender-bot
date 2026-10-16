@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Preview: {{ template.name }}</h1>
+<div class="page-head"><h1>Preview: {{ template.name }}</h1></div>
 <form method="get" class="inline">
   <select name="lead_id">
     {% for l in leads %}<option value="{{ l.id }}" {{ 'selected' if lead and l.id == lead.id }}>{{ l.email }}</option>{% endfor %}

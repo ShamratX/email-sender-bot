@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Leads ({{ shown }}{% if status or q %} of {{ total }}{% endif %})</h1>
+<div class="page-head"><h1>Leads ({{ shown }}{% if status or q %} of {{ total }}{% endif %})</h1></div>
 <form method="get" class="inline">
   <input type="text" name="q" value="{{ q }}" placeholder="search email or field">
   <select name="status" onchange="this.form.submit()">
@@ -15,7 +15,8 @@
 <tr><th>Email</th><th>Sent</th><th>Suppressed</th><th>Source file</th></tr>
 {% for row in rows %}
 <tr><td><a href="/leads/{{ row.id }}">{{ row.email }}</a></td><td>{{ row.sent_count }}</td>
-    <td>{{ row.suppressed or '' }}</td><td class="muted">{{ row.source_file or '' }}</td></tr>
+    <td>{% if row.suppressed %}<span class="pill bad">{{ row.suppressed }}</span>{% endif %}</td>
+    <td class="muted">{{ row.source_file or '' }}</td></tr>
 {% else %}
 <tr><td colspan="4" class="muted">Nothing here. Leads get added when you create or edit a campaign &mdash; see <a href="/campaigns">Campaigns</a>.</td></tr>
 {% endfor %}

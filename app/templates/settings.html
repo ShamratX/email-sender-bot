@@ -1,32 +1,44 @@
 {% extends "base.html" %}
 {% block body %}
-<h1>Settings</h1>
+<div class="page-head"><h1>Settings</h1></div>
+<p class="{{ 'note ok' if has_key else 'note' }}">RESEND_API_KEY is {{ 'set' if has_key else 'NOT set' }} in .env. Live mode needs it.</p>
 <form method="post" action="/settings">
-  <label>Timezone<input type="text" name="timezone" value="{{ values.timezone }}"></label>
-  <label>Send mode
-    <select name="send_mode">
-      <option value="fake" {{ 'selected' if values.send_mode == 'fake' }}>fake &mdash; nothing actually sent</option>
-      <option value="live" {{ 'selected' if values.send_mode == 'live' }}>live &mdash; real emails via Resend</option>
-    </select></label>
-  <label>Minimum delay between sends (seconds)<input type="number" name="delay_min_seconds" value="{{ values.delay_min_seconds }}"></label>
-  <label>Maximum delay between sends (seconds)<input type="number" name="delay_max_seconds" value="{{ values.delay_max_seconds }}"></label>
-  <label>Postal address shown in the footer<input type="text" name="postal_address" value="{{ values.postal_address }}"></label>
-  <label>Unsubscribe address<input type="email" name="unsubscribe_email" value="{{ values.unsubscribe_email }}"></label>
-  <label>Check each address before sending
-    <select name="verify_before_send">
-      <option value="1" {{ 'selected' if values.verify_before_send == '1' }}>Yes &mdash; skip invalid syntax and dead domains (free, built-in)</option>
-      <option value="0" {{ 'selected' if values.verify_before_send == '0' }}>No &mdash; send to everyone that isn't suppressed</option>
-    </select></label>
-  <label>Days allowed to send on (any step blocked entirely on a day not checked):</label>
-  <label style="font-weight:400">
-    {% for code, label in [(0,'Mon'),(1,'Tue'),(2,'Wed'),(3,'Thu'),(4,'Fri'),(5,'Sat'),(6,'Sun')] %}
-    <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
-      <input type="checkbox" name="send_days" value="{{ code }}" style="width:auto;display:inline-block"
-             {{ 'checked' if code in send_days }}> {{ label }}
+  <fieldset class="group">
+    <legend>Sending behavior</legend>
+    <label>Timezone<input type="text" name="timezone" value="{{ values.timezone }}"></label>
+    <label>Send mode
+      <select name="send_mode">
+        <option value="fake" {{ 'selected' if values.send_mode == 'fake' }}>fake &mdash; nothing actually sent</option>
+        <option value="live" {{ 'selected' if values.send_mode == 'live' }}>live &mdash; real emails via Resend</option>
+      </select></label>
+    <label>Minimum delay between sends (seconds)<input type="number" name="delay_min_seconds" value="{{ values.delay_min_seconds }}"></label>
+    <label>Maximum delay between sends (seconds)<input type="number" name="delay_max_seconds" value="{{ values.delay_max_seconds }}"></label>
+    <label>Check each address before sending
+      <select name="verify_before_send">
+        <option value="1" {{ 'selected' if values.verify_before_send == '1' }}>Yes &mdash; skip invalid syntax and dead domains (free, built-in)</option>
+        <option value="0" {{ 'selected' if values.verify_before_send == '0' }}>No &mdash; send to everyone that isn't suppressed</option>
+      </select></label>
+  </fieldset>
+
+  <fieldset class="group">
+    <legend>Schedule</legend>
+    <label>Days allowed to send on (any step blocked entirely on a day not checked):</label>
+    <label style="font-weight:400">
+      {% for code, label in [(0,'Mon'),(1,'Tue'),(2,'Wed'),(3,'Thu'),(4,'Fri'),(5,'Sat'),(6,'Sun')] %}
+      <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+        <input type="checkbox" name="send_days" value="{{ code }}" style="width:auto;display:inline-block"
+               {{ 'checked' if code in send_days }}> {{ label }}
+      </label>
+      {% endfor %}
     </label>
-    {% endfor %}
-  </label>
-  <button>Save</button>
+  </fieldset>
+
+  <fieldset class="group">
+    <legend>Compliance footer</legend>
+    <label>Postal address shown in the footer<input type="text" name="postal_address" value="{{ values.postal_address }}"></label>
+    <label>Unsubscribe address<input type="email" name="unsubscribe_email" value="{{ values.unsubscribe_email }}"></label>
+  </fieldset>
+
+  <button class="start">Save</button>
 </form>
-<p class="{{ 'muted' if has_key else 'error' }}">RESEND_API_KEY is {{ 'set' if has_key else 'NOT set' }} in .env. Live mode needs it.</p>
 {% endblock %}

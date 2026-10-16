@@ -1,14 +1,16 @@
 {% extends "base.html" %}
 {% block body %}
 {% set active_countries = (c.windowed_countries or '').split(',') | select | list %}
-<h1>{{ c.name }} <span class="pill {{ 'ok' if c.state == 'running' else ('warn' if c.state == 'paused' else '') }}">{{ c.state }}</span></h1>
-{% if msg %}<p class="note">{{ msg }}</p>{% endif %}
-{% if error %}<p class="error">{{ error }}</p>{% endif %}
 {% set active_inbox_names = inboxes | selectattr('id', 'in', active_inbox_ids) | map(attribute='email') | list %}
-<p class="muted">Leads: {{ c.list_name }} &middot;
-   {% if active_countries %}windowed: {{ active_countries | join(', ') }}{% else %}sends anytime{% endif %}
-   &middot; gap {{ c.gap_days }} days &middot; follow-ups {{ c.followup_mode }}
-   &middot; sending from: {{ active_inbox_names | join(', ') if active_inbox_names else 'any enabled' }}</p>
+<div class="page-head">
+  <h1>{{ c.name }} <span class="pill {{ 'ok' if c.state == 'running' else ('warn' if c.state == 'paused' else '') }}">{{ c.state }}</span></h1>
+  <p class="muted">Leads: {{ c.list_name }} &middot;
+     {% if active_countries %}windowed: {{ active_countries | join(', ') }}{% else %}sends anytime{% endif %}
+     &middot; gap {{ c.gap_days }} days &middot; follow-ups {{ c.followup_mode }}
+     &middot; sending from: {{ active_inbox_names | join(', ') if active_inbox_names else 'any enabled' }}</p>
+</div>
+{% if msg %}<p class="note ok">{{ msg }}</p>{% endif %}
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
 
 <div class="actions">
   <form method="post" action="/campaigns/{{ c.id }}/run" class="inline"><button>Run</button></form>
@@ -101,37 +103,49 @@
       <label>Body<textarea name="followup{{ n }}_body" rows="5">{{ current.get(n).body if current.get(n) else '' }}</textarea></label>
     </div>
     {% endfor %}
-    <label>Gap days between steps<input type="number" name="gap_days" value="{{ c.gap_days }}" min="1"></label>
-    <label>Use windowed send times for &mdash; a checked country only sends during its window
-           (set on the Country windows page); unchecked sends anytime:</label>
-    <label style="font-weight:400">
-      {% for code in countries %}
-      <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
-        <input type="checkbox" name="windowed_countries" value="{{ code }}" style="width:auto;display:inline-block"
-               {{ 'checked' if code in active_countries }}> {{ code }}
+    <fieldset class="group">
+      <legend>Scheduling</legend>
+      <label>Gap days between steps<input type="number" name="gap_days" value="{{ c.gap_days }}" min="1"></label>
+      <label>Use windowed send times for &mdash; a checked country only sends during its window
+             (set on the Country windows page); unchecked sends anytime:</label>
+      <label style="font-weight:400">
+        {% for code in countries %}
+        <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+          <input type="checkbox" name="windowed_countries" value="{{ code }}" style="width:auto;display:inline-block"
+                 {{ 'checked' if code in active_countries }}> {{ code }}
+        </label>
+        {% endfor %}
+        <label style="display:inline-block;width:auto;font-weight:400">
+          <input type="checkbox" onclick="this.form.querySelectorAll('input[name=windowed_countries]').forEach(b=>b.checked=this.checked)" style="width:auto;display:inline-block"> All
+        </label>
       </label>
-      {% endfor %}
-      <label style="display:inline-block;width:auto;font-weight:400">
-        <input type="checkbox" onclick="this.form.querySelectorAll('input[name=windowed_countries]').forEach(b=>b.checked=this.checked)" style="width:auto;display:inline-block"> All
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Sending</legend>
+      <label>Which email addresses may send this campaign &mdash; leave all unchecked to use any enabled inbox:</label>
+      <label style="font-weight:400">
+        {% for ibx in inboxes %}
+        <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
+          <input type="checkbox" name="allowed_inboxes" value="{{ ibx.id }}" style="width:auto;display:inline-block"
+                 {{ 'checked' if ibx.id in active_inbox_ids }}> {{ ibx.email }}
+        </label>
+        {% else %}
+        <span class="muted">No inboxes added yet.</span>
+        {% endfor %}
       </label>
-    </label>
-    <label>Which email addresses may send this campaign &mdash; leave all unchecked to use any enabled inbox:</label>
-    <label style="font-weight:400">
-      {% for ibx in inboxes %}
-      <label style="display:inline-block;width:auto;margin-right:14px;font-weight:400">
-        <input type="checkbox" name="allowed_inboxes" value="{{ ibx.id }}" style="width:auto;display:inline-block"
-               {{ 'checked' if ibx.id in active_inbox_ids }}> {{ ibx.email }}
+      <label>Daily cap for this campaign (blank = none)<input type="text" name="daily_cap" value="{{ c.daily_cap or '' }}"></label>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Compliance</legend>
+      <label style="font-weight:400">
+        <input type="hidden" name="footer_enabled" value="0">
+        <input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block" {{ 'checked' if footer_on }}>
+        Add unsubscribe footer to every email in this campaign (initial and every follow-up)
       </label>
-      {% else %}
-      <span class="muted">No inboxes added yet.</span>
-      {% endfor %}
-    </label>
-    <label>Daily cap for this campaign (blank = none)<input type="text" name="daily_cap" value="{{ c.daily_cap or '' }}"></label>
-    <label style="font-weight:400">
-      <input type="hidden" name="footer_enabled" value="0">
-      <input type="checkbox" name="footer_enabled" value="1" style="width:auto;display:inline-block" {{ 'checked' if footer_on }}>
-      Add unsubscribe footer to every email in this campaign (initial and every follow-up)
-    </label>
+    </fieldset>
+
     <button class="start">Save</button>
   </form>
 </details>
