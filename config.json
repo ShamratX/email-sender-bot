@@ -24,12 +24,6 @@
         "Closing the loop, {{business_name}}"
       ],
       "body": "Hi {{business_name}},\n\nThis is my last note -- I noticed your {{star_rating}}-star rating from {{review_count}} reviews in {{search_location}} and still think we could help more people in the area find you.\n\nIf now isn't the right time, no problem at all. If it is, just reply and I'll share the details.\n\nTownloc"
-    },
-    "T1": {
-      "subjects": [
-        "Hi there"
-      ],
-      "body": "Body"
     }
   }
 }
